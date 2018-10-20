@@ -36,8 +36,7 @@ def download_data(local) :
     #if local == True, only download selected files
     if local == 1 :
         print('Downloading data for local testing')
-
-        links = ["amazon_reviews_us_Electronics_v1_00.tsv.gz","amazon_reviews_us_Kitchen_v1_00.tsv.gz"]
+        links = ["amazon_reviews_us_Electronics_v1_00.tsv.gz","amazon_reviews_us_Office_Products_v1_00.tsv.gz"]
         for link in links:
             print(f'Dowloading {link}...')
             fetch_data(filename=link)
