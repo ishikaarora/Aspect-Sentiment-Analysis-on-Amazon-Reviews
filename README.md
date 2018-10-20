@@ -7,16 +7,16 @@ It will be better for us to coordinate different packages using conda environmen
 
 Use this -
 
-'''
-conda create --name <env> --file requirements.txt
 
-'''
+`conda create --name <env> --file requirements.txt`
+
+
 
 And everytime you commit, run this command in the project folder to update the new set of requirements, if you have installed new libraries for the project -
 
-'''
-conda list -e > requirements.txt
-'''
+
+`conda list -e > requirements.txt`
+
 
 Ask me(Achyut), if you want to know more about conda environments!
 
@@ -25,9 +25,8 @@ Ask me(Achyut), if you want to know more about conda environments!
 
 Created a script to download files. Use this in your command line -
 
-'''
-fetch_data.py <local>
-'''
+
+`fetch_data.py <local>`
 
 here <local> is an argument
 1 = Downloads only two files
