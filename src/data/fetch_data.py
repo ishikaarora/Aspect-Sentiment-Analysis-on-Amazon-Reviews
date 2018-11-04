@@ -21,6 +21,7 @@ def fetch_data(filename ,base_url = "https://s3.amazonaws.com/amazon-reviews-pds
     response = urllib.request.urlopen(base_url + filename)
 
     outpath = BASE_PATH + "/data/raw/" + filename[:-3]
+    print('Downloading from {}'.format(base_url + filename))
     with open(outpath, 'wb') as outfile:
         outfile.write(gzip.decompress(response.read()))
 
