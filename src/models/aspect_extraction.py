@@ -11,6 +11,7 @@ import urllib.request
 import gzip
 import sys
 import spacy
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 BASE_PATH = os.getcwd()
@@ -26,7 +27,7 @@ def apply_extraction(row,nlp):
     review_id = row['review_id']
 
     doc=nlp(review_body)
-
+    sid = SentimentIntensityAnalyzer()
 
     ## FIRST RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -34,7 +35,7 @@ def apply_extraction(row,nlp):
     rule1_pairs = []
     for token in doc:
         if token.dep_ == "amod":
-            rule1_pairs.append((token.head.text, token.text))
+            rule1_pairs.append((token.head.text, token.text, sid.polarity_scores(token.text)['compound']))
             #return row['height'] * row['width']
 
 
@@ -55,7 +56,7 @@ def apply_extraction(row,nlp):
             if(child.dep_ == "dobj"):
                 M = child.text
         if(A != "999999" and M != "999999"):
-            rule2_pairs.append((A, M))
+            rule2_pairs.append((A, M, sid.polarity_scores(M)['compound']))
 
 
     ## THIRD RULE OF DEPENDANCY PARSE -
@@ -79,7 +80,7 @@ def apply_extraction(row,nlp):
                 M = child.text
 
         if(A != "999999" and M != "999999"):
-            rule3_pairs.append((A, M))
+            rule3_pairs.append((A, M, sid.polarity_scores(M)['compound']))
 
     ## FOURTH RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -104,7 +105,7 @@ def apply_extraction(row,nlp):
                 M = child.text
 
         if(A != "999999" and M != "999999"):
-            rule4_pairs.append((A, M))
+            rule4_pairs.append((A, M, sid.polarity_scores(M)['compound']))
 
 
     ## FIFTH RULE OF DEPENDANCY PARSE -
@@ -128,7 +129,7 @@ def apply_extraction(row,nlp):
                 buf_var = child.text
 
         if(A != "999999" and buf_var != "999999"):
-            rule3_pairs.append((A, token.text))
+            rule3_pairs.append((A, token.text, sid.polarity_scores(token.text)['compound']))
 
     aspects = []
     aspects = rule1_pairs + rule2_pairs + rule3_pairs +rule4_pairs +rule5_pairs
