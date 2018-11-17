@@ -36,9 +36,20 @@ def fetch_reviews(filepath):
 def apply_extraction(row,nlp):
     review_body = row['review_body']
     review_id = row['review_id']
+    review_marketplace = row['marketplace']
+    customer_id = row['customer_id']
+    product_id = row['product_id']
+    product_parent = row['product_parent']
+    product_title = row['product_title']
+    product_category = row['product_category']
+    date = str(row['review_date'])
+    star_rating = row['star_rating']
+    url = add_amazonlink(product_id)
+
+
 
     doc=nlp(review_body)
-    #sid = SentimentIntensityAnalyzer()
+    sid = init_nltk()
 
     ## FIRST RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -154,8 +165,12 @@ def apply_extraction(row,nlp):
             rule5_pairs.append((A, token.text,sid.polarity_scores(token.text)['compound']))
 
     aspects = []
+
     aspects = rule1_pairs + rule2_pairs + rule3_pairs +rule4_pairs +rule5_pairs
-    dic = {"review_id" : review_id , "aspect_pairs" : aspects}
+    dic = {"review_id" : review_id , "aspect_pairs" : aspects, "review_marketplace" : review_marketplace
+    , "customer_id" : customer_id, "product_id" : product_id, "product_parent" : product_parent,
+    "product_title" : product_title, "product_category" : product_category, "date" : date, "star_rating" : star_rating, "url" : url}
+
     return dic
 
 
@@ -164,6 +179,13 @@ def init_spacy():
     for w in stopwords:
         nlp.vocab[w].is_stop = True
     return nlp
+
+def init_nltk():
+    try :
+        sid = SentimentIntensityAnalyzer()
+    except LookupError:
+        return "Please install SentimentAnalyzer using : nltk.download('vader_lexicon')"
+    return(sid)
 
 
 def spell_check_init():
@@ -185,9 +207,9 @@ def check_spelling(word):
             f.write("\n")
 
 
-def extract_aspects(df):
+def extract_aspects(reviews):
 
-    reviews = df[['review_id', 'review_body']]
+    #reviews = df[['review_id', 'review_body']]
     nlp=init_spacy()
 
 
@@ -208,11 +230,16 @@ def aspect_extraction():
     return aspect_list
 
 
+def add_amazonlink(product_id):
+    AMAZON_BASE_URL = "http://amazon.com/dp/"
+    url = AMAZON_BASE_URL + str(product_id)
+    #product_url = {"product_id" : product_id, "url" : url}
+    return url
 
 if __name__ == '__main__' :
     a = aspect_extraction()
 
-    # USE THIS IF YOU WANT TO SEE THE ASPECTS IN A FILE
+    #USE THIS IF YOU WANT TO SEE THE ASPECTS IN A FILE
     # with open('your_file.txt', 'w') as f:
         # for item in a:
             # f.write("%s\n" % item)

@@ -12,6 +12,7 @@ def clean_data(df):
     print("******Cleaning Started*****")
 
     print(f'Shape of df before cleaning : {df.shape}')
+    df['review_date'] = pd.to_datetime(df['review_date'])
     df = df[df['review_body'].notna()]
     df['review_body'] = df['review_body'].str.replace("<br />", " ")
     df['review_body'] = df['review_body'].str.replace("\[?\[.+?\]?\]", " ")
