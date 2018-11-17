@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+     <meta charset="utf-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <meta name="description" content="">
+     <meta name="author" content="">
+
+
+     <title>Product Review</title>
+
+     <script type="text/javascript" src="static/D3/d3.v3.min.js"></script>
+     <script type="text/javascript" src="static/D3/d3.tip.v0.6.3.js"></script>
+     <link href="static/css/bootstrap.min.css" rel="stylesheet">
+
+     <script language="JavaScript" type="text/javascript"
+     src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js">
+     </script>
+     <style>
+      body {background-color: #D3D3D3;}
+      .d3_tooltip {
+        background: #484848;
+        text-align: left;
+        font-size: 8;
+        font-color: #FFFFFF;
+        height: 150px;
+        width: 30%;
+        border-radius: 5px;
+        opacity: 60%;
+        padding: 10px;
+        position: absolute;
+        overflow-y: scroll;
+       }
+      </style>
+</head>
+
+<body>
+    <h1 style="margin-left: 25px";>Review Details: World Traveler 13.5 Inch Beach Bag</h1>
+    <b style="margin-left: 25px";>Click a product feature to see what reviewers had to say about it!</b>
+    <br>
+
+    <script type="text/javascript">
+        var w = window.innerWidth
+        var h = window.innerHeight
+        var barPadding = 50
+
+        var svg = d3.select("body")
+                .append("svg")
+                .attr("width", w)
+                .attr("height", h);
+
+
+        good_tool_tip = d3.tip()
+           .attr("class", "d3_tooltip")
+           .offset([0,w/6])
+           .html(function(d) {
+            return"<center><strong style=\"color: #FFFFFF\">Reviews</strong></center>\
+            <p style=\"color: #FFFFFF\">"+d+"</p>"
+            })
+
+        bad_tool_tip = d3.tip()
+           .attr("class", "d3_tooltip")
+           .offset([w/6,w/6])
+           .html(function(d) {
+            return"<center><strong style=\"color: #FFFFFF\" >Reviews</strong></center>\
+            <p style=\"color: #FFFFFF\";>"+d+"</p>"
+            })
+
+
+        svg.call(good_tool_tip)
+        svg.call(bad_tool_tip)
+
+        //This will be the outputs of our model
+        goodAspects = ["Size", "Style"]
+        badAspects = ["Material", "Price"]
+
+        //Will need to generate this json {Aspects: Reviews} for all aspects
+        goodReviews = {
+            "Size": ["This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."],
+            "Style": ["This bag has great style!","I really like the design and style of this bag.", "This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."]
+        }
+        badReviews = {
+             "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"]
+        }
+
+        // to evenly space aspects
+        goodBands = [75]
+        for(var i=0; i<goodAspects.length-1; i++){
+          var wordLength = goodAspects[i].length
+          prevBand = goodBands[i]
+          goodBands.push(prevBand+8*wordLength+50)
+        }
+        scaleGood = d3.scale.ordinal()
+          .domain(goodAspects)
+          .range(goodBands)
+
+
+        badBands = [75]
+        for(var i=0; i<badAspects.length-1; i++){
+          var wordLength = badAspects[i].length
+          prevBand = badBands[i]
+          badBands.push(prevBand+8*wordLength+50)
+        }
+
+        scaleBad = d3.scale.ordinal()
+          .domain(badAspects)
+          .range(badBands)
+
+
+        svg.selectAll("goodText")
+            .data(goodAspects)
+            .enter()
+            .append("text")
+            .text(function(d){return d})
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "16px")
+            .attr("x", function(d) {return scaleGood(d)})
+            .attr("y", 100)
+            .on("click", showGoodReview)
+            .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
+            .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
+
+
+        svg.selectAll("badText")
+            .data(badAspects)
+            .enter()
+            .append("text")
+            .text(function(d){return d})
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "16px")
+            .attr("x", function(d) {return scaleBad(d)})
+            .attr("y", 200)
+            .on("click", showBadReview)
+            .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
+            .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
+
+
+
+        good_clicked=false;
+        prevAspectGood = ""
+        function showGoodReview() {
+          currentAspect = d3.select(this)[0][0].innerHTML
+          Reviews = goodReviews[currentAspect]
+
+          toPrint = []
+          for (i=0; i<Reviews.length; i++){
+            if(i==0){
+              toPrint.push("<br>")
+            }
+            else{
+              toPrint.push("<br><br>")
+            }
+            toPrint.push("\"")
+            toPrint.push(Reviews[i])
+            toPrint.push("\"")
+          }
+
+          toPrint = toPrint.join("");
+
+          if(good_clicked && prevAspectGood==currentAspect ) {
+            good_tool_tip.hide(toPrint)
+            prevAspectGood = ""
+            good_clicked = !good_clicked
+
+          } else if (!good_clicked && prevAspectGood!=currentAspect ) {
+              good_tool_tip.show(toPrint)
+              prevAspectGood = currentAspect
+              good_clicked = !good_clicked
+            } else { //switch between tooltips
+              good_tool_tip.hide(toPrint)
+              good_tool_tip.show(toPrint)
+              prevAspectGood = currentAspect
+            }
+        }
+
+        bad_clicked=false;
+        prevAspectBad = ""
+        function showBadReview() {
+          currentAspect = d3.select(this)[0][0].innerHTML
+          Reviews = badReviews[currentAspect]
+
+          toPrint = []
+          for (i=0; i<Reviews.length; i++){
+            if(i==0){
+              toPrint.push("<br>")
+            }
+            else{
+              toPrint.push("<br><br>")
+            }
+            toPrint.push("\"")
+            toPrint.push(Reviews[i])
+            toPrint.push("\"")
+          }
+
+          toPrint = toPrint.join("");
+
+          if(bad_clicked && prevAspectBad==currentAspect ) {
+            bad_tool_tip.hide(toPrint)
+            prevAspectBad = ""
+            bad_clicked = !bad_clicked
+
+          } else if (!bad_clicked && prevAspectBad!=currentAspect ) {
+              bad_tool_tip.show(toPrint)
+              prevAspectBad = currentAspect
+              bad_clicked = !bad_clicked
+            } else { //switch between tooltips
+              bad_tool_tip.hide(toPrint)
+              bad_tool_tip.show(toPrint)
+              prevAspectBad = currentAspect
+            }
+        }
+
+
+        svg.append("text")
+            .text("What Reviews Dislike About This Product:")
+            .attr("font-family", "sans-serif")
+            .attr("font-weight", "bold")
+            .attr("font-size", "18px")
+            .attr("transform", "translate(50,150)")
+
+
+        svg.append("text")
+            .text("What Reviewers Like About This Product:")
+            .attr("font-family", "sans-serif")
+            .attr("font-weight", "bold")
+            .attr("font-size", "18px")
+            .attr("transform", "translate(50,50)")
+
+
+    </script>
+
+
+</body>
+
+</html>
