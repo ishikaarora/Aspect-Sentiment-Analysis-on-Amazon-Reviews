@@ -56,6 +56,7 @@
         var h = window.innerHeight
         var barPadding = 50
 
+
         graphH = h/1.4
 
         var svg = d3.select("body")
@@ -63,8 +64,7 @@
                 .attr("width", w)
                 .attr("height", h);
 
-
-        good_tool_tip = d3.tip()
+        tool_tip = d3.tip()
            .attr("class", "d3_tooltip")
            .offset([0,w/6])
            .html(function(d) {
@@ -72,34 +72,82 @@
             <p style=\"color: #FFFFFF\">"+d+"</p>"
             })
 
-        bad_tool_tip = d3.tip()
-           .attr("class", "d3_tooltip")
-           .offset([w/6,w/6])
-           .html(function(d) {
-            return"<center><strong style=\"color: #FFFFFF\" >Reviews</strong></center>\
-            <p style=\"color: #FFFFFF\";>"+d+"</p>"
-            })
 
-
-        svg.call(good_tool_tip)
-        svg.call(bad_tool_tip)
+        svg.call(tool_tip)
 
         //This will be the outputs of our model
         goodAspects = ["Size", "Style"]
         badAspects = ["Material", "Price"]
 
         //Will need to generate this json {Aspects: Reviews} for all aspects
-        goodReviews = {
+        ReviewsJS = {
             "Size": ["This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."],
-            "Style": ["This bag has great style!","I really like the design and style of this bag.", "This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."]
+            "Style": ["This bag has great style!","I really like the design and style of this bag.", "This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."], "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"], "Shipping": ["Took so long to get delviered"], "Quality": ["Bad"]
         }
         badReviews = {
              "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"]
         }
 
-        Scores = [["Size", 0.4], ["Style", 0.8], ["Material", -0.2, ], ["Price", -0.6],
-        ["Quality",0.35], ["Shipping", -0.9]]
+        Scores = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", -0.6],
+        ["Quality",-0.35], ["Shipping", -0.9]]
 
+        Scores2 = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", 0.6],
+        ["Quality",0.35], ["Shipping", 0.9]]
+
+
+        // bubble chart
+
+        var maxSize = 500,
+          color = d3.scale.category20b(); //color category
+
+        var bubble = d3.layout.pack()
+            .sort(null)
+            .size([maxSize, maxSize])
+            .value(function(d) {return d[1]})
+            .padding(1.5);
+
+        var svg1 = d3.select("body")
+            .append("svg")
+            .attr("width", maxSize)
+            .attr("height", maxSize)
+            .attr("class", "bubble");
+
+
+            var nodes = bubble.nodes({children:Scores2}).filter(function(d) { return !d.children; });
+
+            //setup the chart
+            var bubbles = svg1.append("g")
+                .attr("transform", "translate(0,0)")
+                .selectAll(".bubble")
+                .data(nodes)
+                .enter();
+
+            //create the bubbles
+            bubbles.append("circle")
+                .attr("r", function(d){ return d.r; })
+                .attr("cx", function(d){ return d.x; })
+                .attr("cy", function(d){ return d.y; })
+                .style("fill", function(d) { return color(d.value); })
+                .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
+                .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
+                .on("click", showGoodReview);
+
+            //format the text for each bubble
+            bubbles.append("text")
+                .attr("x", function(d){ return d.x; })
+                .attr("y", function(d){ return d.y + 5; })
+                .attr("text-anchor", "middle")
+                .text(function(d){ return d[0]; })
+                .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
+                .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
+                .on("click", showGoodReview)
+                .style({
+                    "fill":"white",
+                    "font-family":"Helvetica Neue, Helvetica, Arial, san-serif",
+                    "font-size": "12px"
+                });
+
+        //bar chart
 
         var scaleX = d3.scale.linear()
           .domain(d3.extent(Scores, function(d) { return d[1]; }))
@@ -119,6 +167,7 @@
           .attr("y", function(d) { return scaleY(d[0]); })
           .attr("width", function(d) { return Math.abs(scaleX(d[1]) - scaleX(0)); })
           .attr("height", scaleY.rangeBand());
+
 
 
         var xAxis = d3.svg.axis()
@@ -151,64 +200,12 @@
           .attr("font-size", "26px")
           .attr("text-anchor", "middle")
 
-        /* to evenly space aspects
-        goodBands = [75]
-        for(var i=0; i<goodAspects.length-1; i++){
-          var wordLength = goodAspects[i].length
-          prevBand = goodBands[i]
-          goodBands.push(prevBand+8*wordLength+50)
-        }
-        scaleGood = d3.scale.ordinal()
-          .domain(goodAspects)
-          .range(goodBands)
 
-
-        badBands = [75]
-        for(var i=0; i<badAspects.length-1; i++){
-          var wordLength = badAspects[i].length
-          prevBand = badBands[i]
-          badBands.push(prevBand+8*wordLength+50)
-        }
-
-        scaleBad = d3.scale.ordinal()
-          .domain(badAspects)
-          .range(badBands)*/
-
-        /*
-        svg.selectAll("goodText")
-            .data(goodAspects)
-            .enter()
-            .append("text")
-            .text(function(d){return d})
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "16px")
-            .attr("x", function(d) {return scaleGood(d)})
-            .attr("y", 100)
-            .on("click", showGoodReview)
-            .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
-            .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
-
-
-        svg.selectAll("badText")
-            .data(badAspects)
-            .enter()
-            .append("text")
-            .text(function(d){return d})
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "16px")
-            .attr("x", function(d) {return scaleBad(d)})
-            .attr("y", 200)
-            .on("click", showBadReview)
-            .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
-            .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
-
-          */
-
-        good_clicked=false;
-        prevAspectGood = ""
+        clicked=false;
+        prevAspect = ""
         function showGoodReview() {
-          currentAspect = d3.select(this)[0][0].innerHTML
-          Reviews = goodReviews[currentAspect]
+          currentAspect = this.__data__[0]
+          Reviews = ReviewsJS[currentAspect]
 
           toPrint = []
           for (i=0; i<Reviews.length; i++){
@@ -225,56 +222,19 @@
 
           toPrint = toPrint.join("");
 
-          if(good_clicked && prevAspectGood==currentAspect ) {
-            good_tool_tip.hide(toPrint)
-            prevAspectGood = ""
-            good_clicked = !good_clicked
+          if(clicked && prevAspect==currentAspect ) {
+            tool_tip.hide(toPrint)
+            prevAspect = ""
+            clicked = !clicked
 
-          } else if (!good_clicked && prevAspectGood!=currentAspect ) {
-              good_tool_tip.show(toPrint)
-              prevAspectGood = currentAspect
-              good_clicked = !good_clicked
+          } else if (!clicked && prevAspect!=currentAspect ) {
+              tool_tip.show(toPrint)
+              prevAspect = currentAspect
+              clicked = !clicked
             } else { //switch between tooltips
-              good_tool_tip.hide(toPrint)
-              good_tool_tip.show(toPrint)
-              prevAspectGood = currentAspect
-            }
-        }
-
-        bad_clicked=false;
-        prevAspectBad = ""
-        function showBadReview() {
-          currentAspect = d3.select(this)[0][0].innerHTML
-          Reviews = badReviews[currentAspect]
-
-          toPrint = []
-          for (i=0; i<Reviews.length; i++){
-            if(i==0){
-              toPrint.push("<br>")
-            }
-            else{
-              toPrint.push("<br><br>")
-            }
-            toPrint.push("\"")
-            toPrint.push(Reviews[i])
-            toPrint.push("\"")
-          }
-
-          toPrint = toPrint.join("");
-
-          if(bad_clicked && prevAspectBad==currentAspect ) {
-            bad_tool_tip.hide(toPrint)
-            prevAspectBad = ""
-            bad_clicked = !bad_clicked
-
-          } else if (!bad_clicked && prevAspectBad!=currentAspect ) {
-              bad_tool_tip.show(toPrint)
-              prevAspectBad = currentAspect
-              bad_clicked = !bad_clicked
-            } else { //switch between tooltips
-              bad_tool_tip.hide(toPrint)
-              bad_tool_tip.show(toPrint)
-              prevAspectBad = currentAspect
+              tool_tip.hide(toPrint)
+              tool_tip.show(toPrint)
+              prevAspect = currentAspect
             }
         }
 
