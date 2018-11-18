@@ -11,14 +11,24 @@
 
      <title>Product Review</title>
 
-     <script type="text/javascript" src="static/D3/d3.v3.min.js"></script>
-     <script type="text/javascript" src="static/D3/d3.tip.v0.6.3.js"></script>
+     <script type="text/javascript" src="../static/D3/d3.v3.min.js"></script>
+     <script type="text/javascript" src="../static/D3/d3.tip.v0.6.3.js"></script>
      <link href="static/css/bootstrap.min.css" rel="stylesheet">
 
      <script language="JavaScript" type="text/javascript"
      src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js">
      </script>
      <style>
+     .axis text {
+        font: 20px sans-serif;
+      }
+
+      .axis path,
+      .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
       body {background-color: #D3D3D3;}
       .d3_tooltip {
         background: #484848;
@@ -45,6 +55,8 @@
         var w = window.innerWidth
         var h = window.innerHeight
         var barPadding = 50
+
+        graphH = h/1.4
 
         var svg = d3.select("body")
                 .append("svg")
@@ -85,7 +97,61 @@
              "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"]
         }
 
-        // to evenly space aspects
+        Scores = [["Size", 0.4], ["Style", 0.8], ["Material", -0.2, ], ["Price", -0.6],
+        ["Quality",0.35], ["Shipping", -0.9]]
+
+
+        var scaleX = d3.scale.linear()
+          .domain(d3.extent(Scores, function(d) { return d[1]; }))
+          .range([barPadding, w-barPadding]);
+
+        var scaleY = d3.scale.ordinal()
+          .domain(Scores.map(function(d) { return d[0]; }))
+          .rangeRoundBands([barPadding, graphH], .2);
+
+        svg.selectAll("rect")
+          .data(Scores)
+          .enter()
+          .append("rect")
+          .attr("fill", function(d) {
+            if(d[1] > 0) { return "green" } else {return "#d13419" }})
+          .attr("x", function(d) { return scaleX(Math.min(0, d[1])); })
+          .attr("y", function(d) { return scaleY(d[0]); })
+          .attr("width", function(d) { return Math.abs(scaleX(d[1]) - scaleX(0)); })
+          .attr("height", scaleY.rangeBand());
+
+
+        var xAxis = d3.svg.axis()
+          .scale(scaleX)
+          .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+          .scale(scaleY)
+          .orient("left")
+          .tickSize(0)
+          .tickPadding(6);
+
+        svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," +graphH+ ")")
+          .call(xAxis);
+
+        svg.append("g")
+          .attr("class", "y axis")
+          .attr("transform", "translate(" + scaleX(0) + ",0)")
+          .call(yAxis);
+
+
+        barHeader = [0, "Product Feature Score"]
+        svg.append("text")
+          .text(barHeader[1])
+          .attr("x", scaleX(barHeader[0]))
+          .attr("y", barPadding-10)
+          .attr("font-family", "sans-serif")
+          .attr("font-size", "26px")
+          .attr("text-anchor", "middle")
+
+        /* to evenly space aspects
         goodBands = [75]
         for(var i=0; i<goodAspects.length-1; i++){
           var wordLength = goodAspects[i].length
@@ -106,9 +172,9 @@
 
         scaleBad = d3.scale.ordinal()
           .domain(badAspects)
-          .range(badBands)
+          .range(badBands)*/
 
-
+        /*
         svg.selectAll("goodText")
             .data(goodAspects)
             .enter()
@@ -136,7 +202,7 @@
             .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
             .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
 
-
+          */
 
         good_clicked=false;
         prevAspectGood = ""
@@ -211,23 +277,6 @@
               prevAspectBad = currentAspect
             }
         }
-
-
-        svg.append("text")
-            .text("What Reviews Dislike About This Product:")
-            .attr("font-family", "sans-serif")
-            .attr("font-weight", "bold")
-            .attr("font-size", "18px")
-            .attr("transform", "translate(50,150)")
-
-
-        svg.append("text")
-            .text("What Reviewers Like About This Product:")
-            .attr("font-family", "sans-serif")
-            .attr("font-weight", "bold")
-            .attr("font-size", "18px")
-            .attr("transform", "translate(50,50)")
-
 
     </script>
 
