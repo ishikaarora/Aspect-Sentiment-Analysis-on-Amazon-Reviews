@@ -12,13 +12,16 @@ import gzip
 import sys
 import spacy
 import json
+import boto3
+from boto.s3.connection import S3Connection
+
 #import enchant
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 BASE_PATH = os.getcwd()
 PARENT = os.path.dirname(BASE_PATH)
-
+CRED_PATH = BASE_PATH + "/data/credentials.txt"
 
 #USE THIS FOR IMPORTING ANY FUNCTIONS FROM src
 sys.path.insert(0,BASE_PATH)
@@ -29,6 +32,12 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 def fetch_reviews(filepath):
     raw_data = pd.read_table(filepath,nrows = 300,error_bad_lines=False)
+    return raw_data
+
+def fetch_s3(filename):
+    s3_basepath = 's3://amazon-reviews-pds/tsv/'
+    s3_fullpath = s3_basepath + filename
+    raw_data = pd.read_table(s3_fullpath, compression = 'gzip', nrows = 300,error_bad_lines=False)
     return raw_data
 
 
@@ -175,12 +184,14 @@ def apply_extraction(row,nlp):
 
 
 def init_spacy():
+    print("Loading Spacy")
     nlp=spacy.load("en_core_web_lg")
     for w in stopwords:
         nlp.vocab[w].is_stop = True
     return nlp
 
 def init_nltk():
+    print("Loading NLTK")
     try :
         sid = SentimentIntensityAnalyzer()
     except LookupError:
@@ -212,7 +223,7 @@ def extract_aspects(reviews):
     #reviews = df[['review_id', 'review_body']]
     nlp=init_spacy()
 
-
+    print("Entering Apply function!")
     aspect_list = reviews.apply(lambda row: apply_extraction(row,nlp), axis=1) #going through all the rows in the dataframe
 
     return aspect_list
@@ -220,8 +231,12 @@ def extract_aspects(reviews):
 
 def aspect_extraction():
     filepath = BASE_PATH + "/data/raw/amazon_reviews_us_Electronics_v1_00.tsv"
-
     reviews =  fetch_reviews(filepath)
+
+    # UNCOMMENT THIS WHEN RUNNING ON AWS
+    # s3_filename = "amazon_reviews_us_Wireless_v1_00.tsv.gz"
+    # reviews = fetch_s3(s3_filename)
+
     reviews = clean_data.clean_data(reviews)
     aspect_list = extract_aspects(reviews)
 
@@ -239,7 +254,7 @@ def add_amazonlink(product_id):
 if __name__ == '__main__' :
     a = aspect_extraction()
 
-    #USE THIS IF YOU WANT TO SEE THE ASPECTS IN A FILE
+    # USE THIS IF YOU WANT TO SEE THE ASPECTS IN A FILE
     # with open('your_file.txt', 'w') as f:
-        # for item in a:
-            # f.write("%s\n" % item)
+    #     for item in a:
+    #         f.write("%s\n" % item)

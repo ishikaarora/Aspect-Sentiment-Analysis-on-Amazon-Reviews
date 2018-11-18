@@ -8,3 +8,4 @@ Temporary Items
 *.apdisk
 data/
 __pycache__/
+boto.cfg
