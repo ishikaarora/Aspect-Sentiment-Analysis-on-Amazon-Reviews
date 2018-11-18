@@ -31,7 +31,7 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 
 def fetch_reviews(filepath):
-    raw_data = pd.read_table(filepath,nrows = 300,error_bad_lines=False)
+    raw_data = pd.read_table(filepath,nrows = 1000,error_bad_lines=False)
     return raw_data
 
 def fetch_s3(filename):
@@ -42,7 +42,7 @@ def fetch_s3(filename):
 
 
 
-def apply_extraction(row,nlp):
+def apply_extraction(row,nlp,sid):
     review_body = row['review_body']
     review_id = row['review_id']
     review_marketplace = row['marketplace']
@@ -58,7 +58,7 @@ def apply_extraction(row,nlp):
 
 
     doc=nlp(review_body)
-    sid = init_nltk()
+
 
     ## FIRST RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -191,13 +191,13 @@ def init_spacy():
     return nlp
 
 def init_nltk():
-    print("Loading NLTK")
+    print("\nLoading NLTK....")
     try :
         sid = SentimentIntensityAnalyzer()
     except LookupError:
-        return "Please install SentimentAnalyzer using : nltk.download('vader_lexicon')"
+        print("Please install SentimentAnalyzer using : nltk.download('vader_lexicon')")
+    print("NLTK successfully loaded")
     return(sid)
-
 
 def spell_check_init():
     spell_dict = enchant.Dict("en_US")
@@ -218,18 +218,19 @@ def check_spelling(word):
             f.write("\n")
 
 
-def extract_aspects(reviews):
+def extract_aspects(reviews,nlp):
 
     #reviews = df[['review_id', 'review_body']]
-    nlp=init_spacy()
+    # nlp = init_spacy()
+    sid = init_nltk()
 
     print("Entering Apply function!")
-    aspect_list = reviews.apply(lambda row: apply_extraction(row,nlp), axis=1) #going through all the rows in the dataframe
+    aspect_list = reviews.apply(lambda row: apply_extraction(row,nlp,sid), axis=1) #going through all the rows in the dataframe
 
     return aspect_list
 
 
-def aspect_extraction():
+def aspect_extraction(nlp):
     filepath = BASE_PATH + "/data/raw/amazon_reviews_us_Electronics_v1_00.tsv"
     reviews =  fetch_reviews(filepath)
 
@@ -238,7 +239,7 @@ def aspect_extraction():
     # reviews = fetch_s3(s3_filename)
 
     reviews = clean_data.clean_data(reviews)
-    aspect_list = extract_aspects(reviews)
+    aspect_list = extract_aspects(reviews,nlp)
 
     #print(aspect_list)
 
@@ -252,7 +253,8 @@ def add_amazonlink(product_id):
     return url
 
 if __name__ == '__main__' :
-    a = aspect_extraction()
+    nlp = init_spacy()
+    a = aspect_extraction(nlp)
 
     # USE THIS IF YOU WANT TO SEE THE ASPECTS IN A FILE
     # with open('your_file.txt', 'w') as f:
