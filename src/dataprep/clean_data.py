@@ -9,6 +9,9 @@ from sys import argv
 #         sep = "\t", header=0, error_bad_lines = False)
 
 def clean_data(df):
+
+    pd.options.mode.chained_assignment = None
+
     print("******Cleaning Started*****")
 
     print(f'Shape of df before cleaning : {df.shape}')
