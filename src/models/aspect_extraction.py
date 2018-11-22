@@ -27,10 +27,7 @@ CRED_PATH = BASE_PATH + "/data/credentials.txt"
 sys.path.insert(0,BASE_PATH)
 from src.dataprep import clean_data
 
-#removed it, its and it's, this
-stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
-
-exclude_stopwords = ['it','this']
+prod_pronouns = ['it','this','they','these']
 
 def fetch_reviews(filepath):
     raw_data = pd.read_table(filepath,nrows=300,error_bad_lines=False) #nrows = 300
@@ -66,11 +63,30 @@ def apply_extraction(row,nlp,sid):
     ## RULE = M is child of A with a relationshio of amod
     rule1_pairs = []
     for token in doc:
+        A = "999999"
+        M = "999999"
         if token.dep_ == "amod" and not token.is_stop:
-            #check_spelling(token.text)
-            rule1_pairs.append((token.head.text, token.text,sid.polarity_scores(token.text)['compound'],1))
-            #return row['height'] * row['width']
+            M = token.text
+            A = token.head.text
 
+            # add adverbial modifier of adjective (e.g. 'most comfortable headphones')
+            M_children = token.children
+            for child_m in M_children:
+                if(child_m.dep_ == "advmod"):
+                    M_hash = child_m.text
+                    M = M_hash + " " + M
+                    break
+
+            # negation in adjective, the "no" keyword is a 'det' of the noun (e.g. no interesting characters)
+            A_children = token.head.children
+            for child_a in A_children:
+                if(child_a.dep_ == "det" and child_a.text == 'no'):
+                    neg_prefix = 'not'
+                    M = neg_prefix + " " + M
+                    break
+
+        if(A != "999999" and M != "999999"):
+            rule1_pairs.append((A, M,sid.polarity_scores(token.text)['compound'],1))
 
     ## SECOND RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -83,14 +99,22 @@ def apply_extraction(row,nlp,sid):
         children = token.children
         A = "999999"
         M = "999999"
+        add_neg_pfx = False
         for child in children :
             if(child.dep_ == "nsubj" and not child.is_stop):
                 A = child.text
                 # check_spelling(child.text)
 
-            if((child.dep_ == "dobj" and child.pos_ == "ADJ")and not child.is_stop):
+            if((child.dep_ == "dobj" and child.pos_ == "ADJ") and not child.is_stop):
                 M = child.text
                 #check_spelling(child.text)
+
+            if(child.dep_ == "neg"):
+                neg_prefix = child.text
+                add_neg_pfx = True
+
+    if (add_neg_pfx and M != "999999"):
+        M = neg_prefix + " " + M
 
         if(A != "999999" and M != "999999"):
             rule2_pairs.append((A, M,sid.polarity_scores(M)['compound'],2))
@@ -98,9 +122,12 @@ def apply_extraction(row,nlp,sid):
 
     ## THIRD RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
-    #Adjectival Complement - A is a child of something with relationship of nsubj, while
-    # M is a child of the same something with relationship of acomp
-    #Assumption - A verb will have only one NSUBJ and DOBJ
+    ## Adjectival Complement - A is a child of something with relationship of nsubj, while
+    ## M is a child of the same something with relationship of acomp
+    ## Assumption - A verb will have only one NSUBJ and DOBJ
+    ## "The sound of the speakers would be better. The sound of the speakers could be better" - handled using AUX dependency
+
+
 
     rule3_pairs = []
 
@@ -109,6 +136,7 @@ def apply_extraction(row,nlp,sid):
         children = token.children
         A = "999999"
         M = "999999"
+        add_neg_pfx = False
         for child in children :
             if(child.dep_ == "nsubj" and not child.is_stop):
                 A = child.text
@@ -116,6 +144,18 @@ def apply_extraction(row,nlp,sid):
 
             if(child.dep_ == "acomp" and not child.is_stop):
                 M = child.text
+
+            # example - 'this could have been better' -> (this, not better)
+            if(child.dep_ == "aux" and child.tag_ == "MD"):
+                neg_prefix = "not"
+                add_neg_pfx = True
+
+            if(child.dep_ == "neg"):
+                neg_prefix = child.text
+                add_neg_pfx = True
+
+        if (add_neg_pfx and M != "999999"):
+            M = neg_prefix + " " + M
                 #check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
@@ -136,24 +176,28 @@ def apply_extraction(row,nlp,sid):
         children = token.children
         A = "999999"
         M = "999999"
+        add_neg_pfx = False
         for child in children :
             if((child.dep_ == "nsubjpass" or child.dep_ == "nsubj") and not child.is_stop):
                 A = child.text
                 # check_spelling(child.text)
 
             if(child.dep_ == "advmod" and not child.is_stop):
-                M_children = child.children
                 M = child.text
-                flag = 0
+                M_children = child.children
                 for child_m in M_children:
                     if(child_m.dep_ == "advmod"):
-                        flag = 1
                         M_hash = child_m.text
+                        M = M_hash + " " + child.text
                         break
-
-                if flag:
-                    M = M_hash + " " + child.text
                 #check_spelling(child.text)
+
+            if(child.dep_ == "neg"):
+                neg_prefix = child.text
+                add_neg_pfx = True
+
+        if (add_neg_pfx and M != "999999"):
+            M = neg_prefix + " " + M
 
         if(A != "999999" and M != "999999"):
             rule4_pairs.append((A, M,sid.polarity_scores(M)['compound'],4)) # )
@@ -216,6 +260,7 @@ def apply_extraction(row,nlp,sid):
         children = token.children
         A = "999999"
         M = "999999"
+        add_neg_pfx = False
         for child in children :
             if(child.dep_ == "nsubj" and not child.is_stop):
                 A = child.text
@@ -224,6 +269,13 @@ def apply_extraction(row,nlp,sid):
             if((child.dep_ == "attr") and not child.is_stop):
                 M = child.text
                 #check_spelling(child.text)
+
+            if(child.dep_ == "neg"):
+                neg_prefix = child.text
+                add_neg_pfx = True
+
+        if (add_neg_pfx and M != "999999"):
+            M = neg_prefix + " " + M
 
         if(A != "999999" and M != "999999"):
             rule7_pairs.append((A, M,sid.polarity_scores(M)['compound'],7))
@@ -234,8 +286,8 @@ def apply_extraction(row,nlp,sid):
 
     aspects = rule1_pairs + rule2_pairs + rule3_pairs +rule4_pairs +rule5_pairs + rule6_pairs + rule7_pairs
 
-    # replace all instances of "it" and "they" with "product"
-    aspects = [(A,M,P,r) if A not in exclude_stopwords else ("product",M,P,r) for A,M,P,r in aspects ]
+    # replace all instances of "it", "this" and "they" with "product"
+    aspects = [(A,M,P,r) if A not in prod_pronouns else ("product",M,P,r) for A,M,P,r in aspects ]
 
     dic = {"review_id" : review_id , "aspect_pairs" : aspects, "review_marketplace" : review_marketplace
     , "customer_id" : customer_id, "product_id" : product_id, "product_parent" : product_parent,
@@ -244,23 +296,23 @@ def apply_extraction(row,nlp,sid):
     return dic
 
 
-def init_spacy():
-    print("Loading Spacy")
-    nlp=spacy.load("en_core_web_lg")
-    for w in stopwords:
-        nlp.vocab[w].is_stop = True
-    for w in exclude_stopwords:
-        nlp.vocab[w].is_stop = False
-    return nlp
-
-def init_nltk():
-    print("\nLoading NLTK....")
-    try :
-        sid = SentimentIntensityAnalyzer()
-    except LookupError:
-        print("Please install SentimentAnalyzer using : nltk.download('vader_lexicon')")
-    print("NLTK successfully loaded")
-    return(sid)
+# def init_spacy():
+#     print("Loading Spacy")
+#     nlp=spacy.load("en_core_web_lg")
+#     for w in stopwords:
+#         nlp.vocab[w].is_stop = True
+#     for w in exclude_stopwords:
+#         nlp.vocab[w].is_stop = False
+#     return nlp
+#
+# def init_nltk():
+#     print("\nLoading NLTK....")
+#     try :
+#         sid = SentimentIntensityAnalyzer()
+#     except LookupError:
+#         print("Please install SentimentAnalyzer using : nltk.download('vader_lexicon')")
+#     print("NLTK successfully loaded")
+#     return(sid)
 
 def spell_check_init():
     spell_dict = enchant.Dict("en_US")
@@ -281,11 +333,11 @@ def check_spelling(word):
             f.write("\n")
 
 
-def extract_aspects(reviews,nlp):
+def extract_aspects(reviews,nlp,sid):
 
     #reviews = df[['review_id', 'review_body']]
     # nlp = init_spacy()
-    sid = init_nltk()
+    # sid = init_nltk()
 
     print("Entering Apply function!")
     aspect_list = reviews.apply(lambda row: apply_extraction(row,nlp,sid), axis=1) #going through all the rows in the dataframe
@@ -293,16 +345,16 @@ def extract_aspects(reviews,nlp):
     return aspect_list
 
 
-def aspect_extraction(nlp):
-    filepath = BASE_PATH + "/data/raw/amazon_reviews_us_Electronics_v1_00.tsv"
-    reviews =  fetch_reviews(filepath)
+def aspect_extraction(nlp,sid):
+    # filepath = BASE_PATH + "/data/raw/amazon_reviews_us_Electronics_v1_00.tsv"
+    # reviews =  fetch_reviews(filepath)
 
     # UNCOMMENT THIS WHEN RUNNING ON AWS
-    # s3_filename = "amazon_reviews_us_Wireless_v1_00.tsv.gz"
-    # reviews = fetch_s3(s3_filename)
+    s3_filename = "amazon_reviews_us_Wireless_v1_00.tsv.gz"
+    reviews = fetch_s3(s3_filename)
 
     reviews = clean_data.clean_data(reviews)
-    aspect_list = extract_aspects(reviews,nlp)
+    aspect_list = extract_aspects(reviews,nlp,sid)
 
     #print(aspect_list)
 
@@ -316,8 +368,8 @@ def add_amazonlink(product_id):
     return url
 
 if __name__ == '__main__' :
-    nlp = init_spacy()
-    a = aspect_extraction(nlp)
+    # nlp = init_spacy()
+    a = aspect_extraction(nlp,sid)
 
     # USE THIS IF YOU WANT TO SEE THE ASPECTS IN A FILE
     # with open('your_file.txt', 'w') as f:

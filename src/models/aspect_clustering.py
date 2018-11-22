@@ -63,11 +63,11 @@ def get_word_vectors(unique_aspects, nlp):
     return asp_vectors
 
 def get_word_clusters(unique_aspects, nlp):
-    print("Found {} unique aspects for this product".format(len(unique_aspects)))
+    # print("Found {} unique aspects for this product".format(len(unique_aspects)))
     asp_vectors = get_word_vectors(unique_aspects, nlp)
     # n_clusters = min(NUM_CLUSTERS,len(unique_aspects))
     if len(unique_aspects) <= NUM_CLUSTERS:
-        print("Too few aspects ({}) found. No clustering required...".format(len(unique_aspects)))
+        # print("Too few aspects ({}) found. No clustering required...".format(len(unique_aspects)))
         return list(range(len(unique_aspects)))
 
     print("Running k-means clustering...")
@@ -75,7 +75,7 @@ def get_word_clusters(unique_aspects, nlp):
     kmeans = cluster.KMeans(n_clusters=n_clusters)
     kmeans.fit(asp_vectors)
     labels = kmeans.labels_
-    print("Finished running k-means clustering with {} labels".format(len(labels)))
+    # print("Finished running k-means clustering with {} labels".format(len(labels)))
     return labels
 
 def get_cluster_names_map(asp_to_cluster_map, aspect_freq_map):
@@ -95,7 +95,7 @@ def get_cluster_names_map(asp_to_cluster_map, aspect_freq_map):
 
 def add_clusters_to_reviews(reviews_data, nlp):
     product_aspects = get_aspects(reviews_data)
-    print("Total aspects found: {}".format(len(product_aspects)))
+    # print("Total aspects found: {}".format(len(product_aspects)))
     aspect_freq_map = get_aspect_freq_map(product_aspects)
     unique_aspects = aspect_freq_map.keys()
     # print("Runnig clustering on {} unique aspects".format(len(unique_aspects)))
@@ -135,7 +135,7 @@ def update_reviews_data(reviews_data, nlp):
         print("\nRunning clustering for product ID - {}".format(prod_id))
         this_product_reviews = [r for r in reviews_data if r['product_id'] == prod_id]
         this_no_asp_reviews = [r for r in this_product_reviews if len(r['aspect_pairs']) == 0]
-        print("Total reviews found: {}. Reviews with no aspect pairs: {}".format(len(this_product_reviews), len(this_no_asp_reviews)))
+        # print("Total reviews found: {}. Reviews with no aspect pairs: {}".format(len(this_product_reviews), len(this_no_asp_reviews)))
 
         add_clusters_to_reviews(this_product_reviews, nlp)
         updated_reviews.extend(this_product_reviews)
