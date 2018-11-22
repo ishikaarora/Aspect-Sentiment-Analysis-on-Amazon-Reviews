@@ -28,12 +28,12 @@ sys.path.insert(0,BASE_PATH)
 from src.dataprep import clean_data
 
 #removed it, its and it's, this
-stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
+stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
 
-exclude_stopwords = ['it','its',"it's",'this']
+exclude_stopwords = ['it','this']
 
 def fetch_reviews(filepath):
-    raw_data = pd.read_table(filepath,error_bad_lines=False) #nrows = 300
+    raw_data = pd.read_table(filepath,nrows=300,error_bad_lines=False) #nrows = 300
     return raw_data
 
 def fetch_s3(filename):
@@ -41,7 +41,6 @@ def fetch_s3(filename):
     s3_fullpath = s3_basepath + filename
     raw_data = pd.read_table(s3_fullpath, compression = 'gzip',error_bad_lines=False)
     return raw_data
-
 
 
 def apply_extraction(row,nlp,sid):
@@ -69,7 +68,7 @@ def apply_extraction(row,nlp,sid):
     for token in doc:
         if token.dep_ == "amod" and not token.is_stop:
             #check_spelling(token.text)
-            rule1_pairs.append((token.head.text, token.text,sid.polarity_scores(token.text)['compound']))
+            rule1_pairs.append((token.head.text, token.text,sid.polarity_scores(token.text)['compound'],1))
             #return row['height'] * row['width']
 
 
@@ -94,7 +93,7 @@ def apply_extraction(row,nlp,sid):
                 #check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
-            rule2_pairs.append((A, M,sid.polarity_scores(M)['compound']))
+            rule2_pairs.append((A, M,sid.polarity_scores(M)['compound'],2))
 
 
     ## THIRD RULE OF DEPENDANCY PARSE -
@@ -120,7 +119,7 @@ def apply_extraction(row,nlp,sid):
                 #check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
-            rule3_pairs.append((A, M, sid.polarity_scores(M)['compound']))
+            rule3_pairs.append((A, M, sid.polarity_scores(M)['compound'],3))
 
     ## FOURTH RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -144,20 +143,20 @@ def apply_extraction(row,nlp,sid):
 
             if(child.dep_ == "advmod" and not child.is_stop):
                 M_children = child.children
+                M = child.text
                 flag = 0
                 for child_m in M_children:
                     if(child_m.dep_ == "advmod"):
                         flag = 1
                         M_hash = child_m.text
                         break
-                if(flag == 0):
-                    M = child.text
-                else:
+
+                if flag:
                     M = M_hash + " " + child.text
                 #check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
-            rule4_pairs.append((A, M,sid.polarity_scores(M)['compound'])) # )
+            rule4_pairs.append((A, M,sid.polarity_scores(M)['compound'],4)) # )
 
 
     ## FIFTH RULE OF DEPENDANCY PARSE -
@@ -183,12 +182,12 @@ def apply_extraction(row,nlp,sid):
                 #check_spelling(child.text)
 
         if(A != "999999" and buf_var != "999999"):
-            rule5_pairs.append((A, token.text,sid.polarity_scores(token.text)['compound']))
+            rule5_pairs.append((A, token.text,sid.polarity_scores(token.text)['compound'],5))
 
 
     ## SIXTH RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
-
+    ## Example - "It ok", "ok" is INTJ (interjections like bravo, great etc)
 
 
     rule6_pairs = []
@@ -204,11 +203,13 @@ def apply_extraction(row,nlp,sid):
                     # check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
-            rule6_pairs.append((A, M,sid.polarity_scores(M)['compound']))
+            rule6_pairs.append((A, M,sid.polarity_scores(M)['compound'],6))
 
 
     ## SEVENTH RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
+    ## ATTR - link between a verb like 'be/seem/appear' and its complement
+    ## Example: 'this is garbage' -> (this, garbage)
 
     rule7_pairs = []
     for token in doc:
@@ -225,14 +226,17 @@ def apply_extraction(row,nlp,sid):
                 #check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
-            rule7_pairs.append((A, M,sid.polarity_scores(M)['compound']))
-
+            rule7_pairs.append((A, M,sid.polarity_scores(M)['compound'],7))
 
 
 
     aspects = []
 
     aspects = rule1_pairs + rule2_pairs + rule3_pairs +rule4_pairs +rule5_pairs + rule6_pairs + rule7_pairs
+
+    # replace all instances of "it" and "they" with "product"
+    aspects = [(A,M,P,r) if A not in exclude_stopwords else ("product",M,P,r) for A,M,P,r in aspects ]
+
     dic = {"review_id" : review_id , "aspect_pairs" : aspects, "review_marketplace" : review_marketplace
     , "customer_id" : customer_id, "product_id" : product_id, "product_parent" : product_parent,
     "product_title" : product_title, "product_category" : product_category, "date" : date, "star_rating" : star_rating, "url" : url}

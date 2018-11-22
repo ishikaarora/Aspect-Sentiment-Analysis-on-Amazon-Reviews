@@ -38,7 +38,7 @@ def get_aspects(reviews_data):
     aspects = []
     for review in reviews_data:
         aspect_pairs = review["aspect_pairs"]
-        for noun,_,_ in aspect_pairs:
+        for noun,_,_,_ in aspect_pairs:
             aspects.append(noun)
     # aspects = [r['aspect_pairs'][0] for r in reviews_data]
     return aspects
@@ -86,10 +86,8 @@ def get_cluster_names_map(asp_to_cluster_map, aspect_freq_map):
         this_cluster_asp = [k for k,v in asp_to_cluster_map.items() if v == i]
         filt_freq_map = {k:v for k,v in aspect_freq_map.items() if k in this_cluster_asp}
         filt_freq_map = sorted(filt_freq_map.items(), key = lambda x: x[1], reverse = True)
-        try:
-            cluster_id_to_name_map[i] = filt_freq_map[0][0]
-        except IndexError:
-            print("Filtered freq map: {}".format(str(filt_freq_map)))
+        cluster_id_to_name_map[i] = filt_freq_map[0][0]
+
         # cluster_to_asp_map[i] = cluster_nouns
 
     # print(cluster_to_asp_map)
@@ -109,7 +107,7 @@ def add_clusters_to_reviews(reviews_data, nlp):
     for review in reviews_data:
         cluster_mapping = []
         aspect_pairs = review["aspect_pairs"]
-        for noun,_,_  in aspect_pairs:
+        for noun,_,_,_  in aspect_pairs:
             cluster_label_id = asp_to_cluster_map[noun]
             cluster_label_name = cluster_names_map[cluster_label_id]
             cluster_mapping.append(cluster_label_name)
@@ -125,7 +123,7 @@ def add_clusters_to_reviews(reviews_data, nlp):
 
     return reviews_data
 
-def update_reviews_data(reviews_data):
+def update_reviews_data(reviews_data, nlp):
     updated_reviews = []
     product_ids = get_unique_product_ids(reviews_data)
     print("Total number of unique products in this category: {}".format(len(product_ids)))
@@ -156,8 +154,8 @@ if __name__ == '__main__' :
     time2 = time()
     reviews_data = get_reviews_data(nlp)
     time3 = time()
-    update_reviews_data(reviews_data)
+    update_reviews_data(reviews_data, nlp)
     time4 = time()
-    print("Time for spacy loading: {0:.2%}s".format(time2-time1))
-    print("Time for aspect extraction: {0:.2%}s".format(time3-time2))
-    print("Time for aspect clustering: {0:.2%}s".format(time4-time3))
+    print("Time for spacy loading: {0:.2}s".format(time2-time1))
+    print("Time for aspect extraction: {0:.2}s".format(time3-time2))
+    print("Time for aspect clustering: {0:.2}s".format(time4-time3))
