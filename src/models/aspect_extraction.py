@@ -27,17 +27,19 @@ CRED_PATH = BASE_PATH + "/data/credentials.txt"
 sys.path.insert(0,BASE_PATH)
 from src.dataprep import clean_data
 
-stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
+#removed it, its and it's, this
+stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
 
+exclude_stopwords = ['it','its',"it's",'this']
 
 def fetch_reviews(filepath):
-    raw_data = pd.read_table(filepath,nrows = 1000,error_bad_lines=False)
+    raw_data = pd.read_table(filepath,error_bad_lines=False) #nrows = 300
     return raw_data
 
 def fetch_s3(filename):
     s3_basepath = 's3://amazon-reviews-pds/tsv/'
     s3_fullpath = s3_basepath + filename
-    raw_data = pd.read_table(s3_fullpath, compression = 'gzip', nrows = 300,error_bad_lines=False)
+    raw_data = pd.read_table(s3_fullpath, compression = 'gzip',error_bad_lines=False)
     return raw_data
 
 
@@ -87,7 +89,7 @@ def apply_extraction(row,nlp,sid):
                 A = child.text
                 # check_spelling(child.text)
 
-            if(child.dep_ == "dobj" and not child.is_stop):
+            if((child.dep_ == "dobj" and child.pos_ == "ADJ")and not child.is_stop):
                 M = child.text
                 #check_spelling(child.text)
 
@@ -136,12 +138,22 @@ def apply_extraction(row,nlp,sid):
         A = "999999"
         M = "999999"
         for child in children :
-            if(child.dep_ == "nsubjpass" and not child.is_stop):
+            if((child.dep_ == "nsubjpass" or child.dep_ == "nsubj") and not child.is_stop):
                 A = child.text
                 # check_spelling(child.text)
 
             if(child.dep_ == "advmod" and not child.is_stop):
-                M = child.text
+                M_children = child.children
+                flag = 0
+                for child_m in M_children:
+                    if(child_m.dep_ == "advmod"):
+                        flag = 1
+                        M_hash = child_m.text
+                        break
+                if(flag == 0):
+                    M = child.text
+                else:
+                    M = M_hash + " " + child.text
                 #check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
@@ -173,9 +185,54 @@ def apply_extraction(row,nlp,sid):
         if(A != "999999" and buf_var != "999999"):
             rule5_pairs.append((A, token.text,sid.polarity_scores(token.text)['compound']))
 
+
+    ## SIXTH RULE OF DEPENDANCY PARSE -
+    ## M - Sentiment modifier || A - Aspect
+
+
+
+    rule6_pairs = []
+    for token in doc:
+        children = token.children
+        A = "999999"
+        M = "999999"
+        if(token.pos_ == "INTJ" and not token.is_stop):
+            for child in children :
+                if(child.dep_ == "nsubj" and not child.is_stop):
+                    A = child.text
+                    M = token.text
+                    # check_spelling(child.text)
+
+        if(A != "999999" and M != "999999"):
+            rule6_pairs.append((A, M,sid.polarity_scores(M)['compound']))
+
+
+    ## SEVENTH RULE OF DEPENDANCY PARSE -
+    ## M - Sentiment modifier || A - Aspect
+
+    rule7_pairs = []
+    for token in doc:
+        children = token.children
+        A = "999999"
+        M = "999999"
+        for child in children :
+            if(child.dep_ == "nsubj" and not child.is_stop):
+                A = child.text
+                # check_spelling(child.text)
+
+            if((child.dep_ == "attr") and not child.is_stop):
+                M = child.text
+                #check_spelling(child.text)
+
+        if(A != "999999" and M != "999999"):
+            rule7_pairs.append((A, M,sid.polarity_scores(M)['compound']))
+
+
+
+
     aspects = []
 
-    aspects = rule1_pairs + rule2_pairs + rule3_pairs +rule4_pairs +rule5_pairs
+    aspects = rule1_pairs + rule2_pairs + rule3_pairs +rule4_pairs +rule5_pairs + rule6_pairs + rule7_pairs
     dic = {"review_id" : review_id , "aspect_pairs" : aspects, "review_marketplace" : review_marketplace
     , "customer_id" : customer_id, "product_id" : product_id, "product_parent" : product_parent,
     "product_title" : product_title, "product_category" : product_category, "date" : date, "star_rating" : star_rating, "url" : url}
@@ -188,6 +245,8 @@ def init_spacy():
     nlp=spacy.load("en_core_web_lg")
     for w in stopwords:
         nlp.vocab[w].is_stop = True
+    for w in exclude_stopwords:
+        nlp.vocab[w].is_stop = False
     return nlp
 
 def init_nltk():
