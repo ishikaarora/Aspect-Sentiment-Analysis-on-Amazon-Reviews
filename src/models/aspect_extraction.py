@@ -1,23 +1,24 @@
 # Python script for extracting aspects based on dependancy rules
 #! /usr/bin/env python
 
+#import enchant
 
-import requests
 import os
+import sys
+import spacy
+from time import time
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import json
+import requests
 import csv
 import numpy as np
 import pandas as pd
 import urllib.request
 import gzip
 import sys
-import spacy
-import json
 import boto3
 from boto.s3.connection import S3Connection
-
-#import enchant
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-
 
 BASE_PATH = os.getcwd()
 PARENT = os.path.dirname(BASE_PATH)
@@ -29,29 +30,29 @@ from src.dataprep import clean_data
 
 prod_pronouns = ['it','this','they','these']
 
-def fetch_reviews(filepath):
-    raw_data = pd.read_table(filepath,nrows=300,error_bad_lines=False) #nrows = 300
+def fetch_reviews(filepath,usecols = None):
+    raw_data = pd.read_table(filepath,nrows=300,error_bad_lines=False,usecols=usecols) #nrows = 300
     return raw_data
 
-def fetch_s3(filename):
+def fetch_s3(filename,usecols = None):
     s3_basepath = 's3://amazon-reviews-pds/tsv/'
     s3_fullpath = s3_basepath + filename
-    raw_data = pd.read_table(s3_fullpath, compression = 'gzip',error_bad_lines=False)
+    raw_data = pd.read_table(s3_fullpath, compression = 'gzip',error_bad_lines=False,chunksize=100000, usecols=usecols)
     return raw_data
 
 
 def apply_extraction(row,nlp,sid):
     review_body = row['review_body']
     review_id = row['review_id']
-    review_marketplace = row['marketplace']
-    customer_id = row['customer_id']
-    product_id = row['product_id']
-    product_parent = row['product_parent']
-    product_title = row['product_title']
-    product_category = row['product_category']
-    date = str(row['review_date'])
-    star_rating = row['star_rating']
-    url = add_amazonlink(product_id)
+    # review_marketplace = row['marketplace']
+    # customer_id = row['customer_id']
+    # product_id = row['product_id']
+    # product_parent = row['product_parent']
+    # product_title = row['product_title']
+    # product_category = row['product_category']
+    # date = str(row['review_date'])
+    # star_rating = row['star_rating']
+    # url = add_amazonlink(product_id)
 
 
 
@@ -86,7 +87,10 @@ def apply_extraction(row,nlp,sid):
                     break
 
         if(A != "999999" and M != "999999"):
-            rule1_pairs.append((A, M,sid.polarity_scores(token.text)['compound'],1))
+            if A in prod_pronouns :
+                A = "product"
+            dict1 = {"noun" : A, "adj" : M, "rule" : 1, "polarity" : sid.polarity_scores(token.text)['compound']}
+            rule1_pairs.append(dict1)
 
     ## SECOND RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -113,11 +117,16 @@ def apply_extraction(row,nlp,sid):
                 neg_prefix = child.text
                 add_neg_pfx = True
 
-    if (add_neg_pfx and M != "999999"):
-        M = neg_prefix + " " + M
+        if (add_neg_pfx and M != "999999"):
+            M = neg_prefix + " " + M
 
         if(A != "999999" and M != "999999"):
-            rule2_pairs.append((A, M,sid.polarity_scores(M)['compound'],2))
+            if A in prod_pronouns :
+                A = "product"
+            dict2 = {"noun" : A, "adj" : M, "rule" : 2, "polarity" : sid.polarity_scores(token.text)['compound']}
+            rule2_pairs.append(dict2)
+
+            #rule2_pairs.append((A, M,sid.polarity_scores(M)['compound'],2))
 
 
     ## THIRD RULE OF DEPENDANCY PARSE -
@@ -159,7 +168,11 @@ def apply_extraction(row,nlp,sid):
                 #check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
-            rule3_pairs.append((A, M, sid.polarity_scores(M)['compound'],3))
+            if A in prod_pronouns :
+                A = "product"
+            dict3 = {"noun" : A, "adj" : M, "rule" : 3, "polarity" : sid.polarity_scores(token.text)['compound']}
+            rule3_pairs.append(dict3)
+            #rule3_pairs.append((A, M, sid.polarity_scores(M)['compound'],3))
 
     ## FOURTH RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
@@ -200,7 +213,11 @@ def apply_extraction(row,nlp,sid):
             M = neg_prefix + " " + M
 
         if(A != "999999" and M != "999999"):
-            rule4_pairs.append((A, M,sid.polarity_scores(M)['compound'],4)) # )
+            if A in prod_pronouns :
+                A = "product"
+            dict4 = {"noun" : A, "adj" : M, "rule" : 4, "polarity" : sid.polarity_scores(token.text)['compound']}
+            rule4_pairs.append(dict4)
+            #rule4_pairs.append((A, M,sid.polarity_scores(M)['compound'],4)) # )
 
 
     ## FIFTH RULE OF DEPENDANCY PARSE -
@@ -226,7 +243,11 @@ def apply_extraction(row,nlp,sid):
                 #check_spelling(child.text)
 
         if(A != "999999" and buf_var != "999999"):
-            rule5_pairs.append((A, token.text,sid.polarity_scores(token.text)['compound'],5))
+            if A in prod_pronouns :
+                A = "product"
+            dict5 = {"noun" : A, "adj" : token.text, "rule" : 5, "polarity" : sid.polarity_scores(token.text)['compound']}
+            rule5_pairs.append(dict5)
+            #rule5_pairs.append((A, token.text,sid.polarity_scores(token.text)['compound'],5))
 
 
     ## SIXTH RULE OF DEPENDANCY PARSE -
@@ -247,7 +268,12 @@ def apply_extraction(row,nlp,sid):
                     # check_spelling(child.text)
 
         if(A != "999999" and M != "999999"):
-            rule6_pairs.append((A, M,sid.polarity_scores(M)['compound'],6))
+            if A in prod_pronouns :
+                A = "product"
+            dict6 = {"noun" : A, "adj" : M, "rule" : 6, "polarity" : sid.polarity_scores(M)['compound']}
+            rule6_pairs.append(dict6)
+
+            #rule6_pairs.append((A, M,sid.polarity_scores(M)['compound'],6))
 
 
     ## SEVENTH RULE OF DEPENDANCY PARSE -
@@ -278,7 +304,12 @@ def apply_extraction(row,nlp,sid):
             M = neg_prefix + " " + M
 
         if(A != "999999" and M != "999999"):
-            rule7_pairs.append((A, M,sid.polarity_scores(M)['compound'],7))
+            if A in prod_pronouns :
+                A = "product"
+            dict7 = {"noun" : A, "adj" : M, "rule" : 7, "polarity" : sid.polarity_scores(M)['compound']}
+            rule7_pairs.append(dict7)
+            #rule7_pairs.append((A, M,sid.polarity_scores(M)['compound'],7))
+
 
 
 
@@ -287,12 +318,13 @@ def apply_extraction(row,nlp,sid):
     aspects = rule1_pairs + rule2_pairs + rule3_pairs +rule4_pairs +rule5_pairs + rule6_pairs + rule7_pairs
 
     # replace all instances of "it", "this" and "they" with "product"
-    aspects = [(A,M,P,r) if A not in prod_pronouns else ("product",M,P,r) for A,M,P,r in aspects ]
+    #aspects = [(A,M,P,r) if A not in prod_pronouns else ("product",M,P,r) for A,M,P,r in aspects ]
 
-    dic = {"review_id" : review_id , "aspect_pairs" : aspects, "review_marketplace" : review_marketplace
-    , "customer_id" : customer_id, "product_id" : product_id, "product_parent" : product_parent,
-    "product_title" : product_title, "product_category" : product_category, "date" : date, "star_rating" : star_rating, "url" : url}
+    # dic = {"review_id" : review_id , "aspect_pairs" : aspects, "review_marketplace" : review_marketplace
+    # , "customer_id" : customer_id, "product_id" : product_id, "product_parent" : product_parent,
+    # "product_title" : product_title, "product_category" : product_category, "date" : date, "star_rating" : star_rating, "url" : url}
 
+    dic = {"review_id" : review_id , "aspect_pairs" : aspects}
     return dic
 
 
@@ -313,24 +345,24 @@ def apply_extraction(row,nlp,sid):
 #         print("Please install SentimentAnalyzer using : nltk.download('vader_lexicon')")
 #     print("NLTK successfully loaded")
 #     return(sid)
-
-def spell_check_init():
-    spell_dict = enchant.Dict("en_US")
-    return spell_dict
-
-def check_spelling(word):
-    spell_dict = spell_check_init()
-    if not spell_dict.check(word):
-        list_of_words = spell_dict.suggest(word)
-        #print(list_of_words)
-        with open('spelling.txt', 'a') as f:
-            f.write("%s :" % word)
-
-            for item in list_of_words:
-
-                f.write("%s ," % item)
-
-            f.write("\n")
+#
+# def spell_check_init():
+#     spell_dict = enchant.Dict("en_US")
+#     return spell_dict
+#
+# def check_spelling(word):
+#     spell_dict = spell_check_init()
+#     if not spell_dict.check(word):
+#         list_of_words = spell_dict.suggest(word)
+#         #print(list_of_words)
+#         with open('spelling.txt', 'a') as f:
+#             f.write("%s :" % word)
+#
+#             for item in list_of_words:
+#
+#                 f.write("%s ," % item)
+#
+#             f.write("\n")
 
 
 def extract_aspects(reviews,nlp,sid):
@@ -341,24 +373,51 @@ def extract_aspects(reviews,nlp,sid):
 
     print("Entering Apply function!")
     aspect_list = reviews.apply(lambda row: apply_extraction(row,nlp,sid), axis=1) #going through all the rows in the dataframe
-
     return aspect_list
 
 
 def aspect_extraction(nlp,sid):
+    usecols =  ['review_id','review_body']
+
     # filepath = BASE_PATH + "/data/raw/amazon_reviews_us_Electronics_v1_00.tsv"
-    # reviews =  fetch_reviews(filepath)
+    # reviews =  fetch_reviews(filepath,usecols)
 
     # UNCOMMENT THIS WHEN RUNNING ON AWS
     s3_filename = "amazon_reviews_us_Wireless_v1_00.tsv.gz"
-    reviews = fetch_s3(s3_filename)
+    raw_data = fetch_s3(s3_filename, usecols)
 
-    reviews = clean_data.clean_data(reviews)
-    aspect_list = extract_aspects(reviews,nlp,sid)
+    # reviews = clean_data.clean_data(reviews)
+    # aspect_list = extract_aspects(reviews,nlp,sid)
+    print("Working on Chunks!!!")
+    chunk_count = 0
+    #reviews = pd.DataFrame()
+    for reviews in raw_data:
+        chunk_count = chunk_count + 1
+        reviews = clean_data.clean_data(reviews)
+        time_start = time()
+        aspect_list = extract_aspects(reviews,nlp,sid)
+        time_end = time()
+        print("Time for aspect extraction: {0:.2}s".format(time_end-time_start))
+        print(f'Updating chunk results : {chunk_count}')
+        time_start_1 = time()
+        print("Appending to JSON FIle")
+        aspect_list = list(aspect_list)
+        with open('reviews_Nov24.json', 'a') as outfile:
+            json.dump(aspect_list, outfile)
+        time_end_1 = time()
+        print("Time for Writing: {0:.2}s".format(time_end_1-time_start_1))
 
-    #print(aspect_list)
+        print("Finished writing results to JSON!!")
+        print("----------------***----------------")
 
-    return aspect_list
+
+        #reviews = pd.concat([reviews,chunk])
+
+    #print(f'Shape of the merged file:{reviews.shape}')
+
+
+
+    return 1
 
 
 def add_amazonlink(product_id):
