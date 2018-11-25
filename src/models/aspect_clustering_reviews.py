@@ -1,3 +1,4 @@
+import ast
 import json
 import spacy
 import pandas as pd
@@ -14,6 +15,7 @@ BASE_PATH = os.getcwd()
 sys.path.insert(0,BASE_PATH)
 NUM_CLUSTERS = 4
 
+from src.models import aspect_extraction
 # @profile
 def init_spacy():
     print("\nLoading spaCy Model....")
@@ -21,9 +23,19 @@ def init_spacy():
     print("spaCy successfully loaded")
     return nlp
 
+# def get_reviews_data(nlp):
+#     print("----------------***----------------")
+#     print("\nExtracting aspect pairs")
+#     reviews_data = aspect_extraction.aspect_extraction(nlp)
+#     print("Finished running aspect extraction!!\n")
+#     print("----------------***----------------")
+#     return reviews_data
+
 def get_unique_product_ids(reviews_data):
     product_ids = []
+    # print(reviews_data[0])
     # product_ids = [r['product_id'] for r in reviews_data]
+    # product_ids = [k for k,v in reviews_data]
     return list(set(product_ids))
 
 def get_aspects(reviews_data):
@@ -55,6 +67,7 @@ def get_word_vectors(unique_aspects, nlp):
 def get_word_clusters(unique_aspects, nlp):
     # print("Found {} unique aspects for this product".format(len(unique_aspects)))
     asp_vectors = get_word_vectors(unique_aspects, nlp)
+    # n_clusters = min(NUM_CLUSTERS,len(unique_aspects))
     if len(unique_aspects) <= NUM_CLUSTERS:
         # print("Too few aspects ({}) found. No clustering required...".format(len(unique_aspects)))
         return list(range(len(unique_aspects)))
@@ -83,6 +96,8 @@ def get_cluster_names_map(asp_to_cluster_map, aspect_freq_map):
 
         # cluster_to_asp_map[i] = this_cluster_asp
 
+    # print(cluster_to_asp_map)
+    # print(cluster_id_to_name_map)
     return cluster_id_to_name_map
 # @profile
 def add_clusters_to_reviews(reviews_data, prod_id, nlp):
@@ -99,36 +114,54 @@ def add_clusters_to_reviews(reviews_data, prod_id, nlp):
     updated_reviews = []
 
     for review in reviews_data:
+#         cluster_mapping = []
         aspect_pairs_upd = []
         aspect_pairs = review["aspect_pairs"]
         for map in aspect_pairs:
             noun = map['noun']
             cluster_label_id = asp_to_cluster_map[noun]
             cluster_label_name = cluster_names_map[cluster_label_id]
+#             cluster_mapping.append(cluster_label_name)
             map['cluster'] = cluster_label_name
+            # result.append({'noun':noun, 'adj':adj, 'rule':rule, 'polarity':polarity, 'cluster':cluster_label_name})
             aspect_pairs_upd.append(map)
 
         # assert len(result) == len(aspect_pairs)
         review['aspect_pairs'] = aspect_pairs_upd
         updated_reviews.append(review)
     result = {prod_id:updated_reviews}
+    # print(result)
     return result
 # @profile
 def update_reviews_data(reviews_data, nlp):
     updated_reviews = []
     ctr = 0
+    # product_ids = get_unique_product_ids(reviews_data)
+    # product_ids = reviews_data.keys()
     print("Total number of unique products in this category: {}".format(len(reviews_data)))
+
     # no_asp_reviews = [r for r in reviews_data if len(r['aspect_pairs']) == 0]
     # print("Total reviews found with no aspect pairs: {}".format(len(no_asp_reviews)))
-
+    # product_ids = product_ids[0]
     for i,product in enumerate(reviews_data):
         for prod_id, this_product_reviews in product.items():
+        # this_product_reviews = [r for r in reviews_data if r['product_id'] == prod_id]
+
             # this_no_asp_reviews = [r for r in this_product_reviews if len(r['aspect_pairs']) == 0]
             # print("Total reviews found: {}. Reviews with no aspect pairs: {}".format(len(this_product_reviews), len(this_no_asp_reviews)))
 
-            # print("\nRunning clustering for product ID - {}".format(prod_id))
+            # if ((len(this_product_reviews) >= 20) and (len(this_no_asp_reviews) <= 5)):
+                # with open('input_file.json', 'a') as f:
+                #     json.dump([{prod_id: this_product_reviews}],f)
+                    # for item in a:
+                    #     f.write("%s\n" % item)
+                # print("\nRunning clustering for product ID - {}".format(prod_id))
+                # print(this_product_reviews)
             this_product_upd_reviews = add_clusters_to_reviews(this_product_reviews, prod_id, nlp)
+                # print(this_product_upd_reviews)
             updated_reviews.append(this_product_upd_reviews)
+        # if len(updated_reviews):
+        #     break
 
         if ((i%10000 == 0) and (i != 0)):
             ctr += 1
@@ -141,7 +174,6 @@ def update_reviews_data(reviews_data, nlp):
             print("Finished writing results to json!!")
             print("----------------***----------------")
 
-        # Finally write to output file
         ctr += 1
         print("\n----------------***----------------")
         print("Updating results - batch {}".format(ctr))
@@ -161,6 +193,13 @@ def main():
     print("\nLoading aspect pairs file")
     with open('src/data/reviews_mapping.json', 'r') as fobj:
         reviews_data = json.load(fobj)
+        # data = fobj.readlines()
+
+    # reviews_data = []
+    # for line in data:
+    #     reviews_data.append(ast.literal_eval(line))
+
+    # reviews_data = aspect_extraction.aspect_extraction(nlp,sid)
     print("Finished loading aspect pairs!!\n")
     print("----------------***----------------")
     # time3 = time()
