@@ -48,8 +48,6 @@
 
 <body>
     <h1 style="margin-left: 25px";>Review Details: World Traveler 13.5 Inch Beach Bag</h1>
-    <b style="margin-left: 25px";>Click a product feature to see what reviewers had to say about it!</b>
-    <br>
 
     <script type="text/javascript">
         var w = window.innerWidth
@@ -62,7 +60,7 @@
         var svg = d3.select("body")
                 .append("svg")
                 .attr("width", w)
-                .attr("height", h);
+                .attr("height", h/1.2);
 
         tool_tip = d3.tip()
            .attr("class", "d3_tooltip")
@@ -75,17 +73,10 @@
 
         svg.call(tool_tip)
 
-        //This will be the outputs of our model
-        goodAspects = ["Size", "Style"]
-        badAspects = ["Material", "Price"]
-
         //Will need to generate this json {Aspects: Reviews} for all aspects
         ReviewsJS = {
             "Size": ["This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."],
             "Style": ["This bag has great style!","I really like the design and style of this bag.", "This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."], "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"], "Shipping": ["Took so long to get delviered"], "Quality": ["Bad"]
-        }
-        badReviews = {
-             "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"]
         }
 
         Scores = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", -0.6],
@@ -128,9 +119,10 @@
                 .attr("cx", function(d){ return d.x; })
                 .attr("cy", function(d){ return d.y; })
                 .style("fill", function(d) { return color(d.value); })
+                .on("click", showGoodReview)
                 .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
-                .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
-                .on("click", showGoodReview);
+                .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')});
+
 
             //format the text for each bubble
             bubbles.append("text")
@@ -199,6 +191,15 @@
           .attr("font-family", "sans-serif")
           .attr("font-size", "26px")
           .attr("text-anchor", "middle")
+
+        bubbleHeader = ["Click a bubble to see related reviews!"]
+        svg1.append("text")
+          .text(bubbleHeader[0])
+          .attr("x", barPadding/2)
+          .attr("y", 20)
+          .attr("font-family", "sans-serif")
+          .attr("font-size", "26px")
+          .attr("text-anchor", "left")
 
 
         clicked=false;
