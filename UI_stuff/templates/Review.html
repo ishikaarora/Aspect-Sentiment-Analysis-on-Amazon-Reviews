@@ -47,9 +47,20 @@
 </head>
 
 <body>
-    <h1 style="margin-left: 25px";>Review Details: World Traveler 13.5 Inch Beach Bag</h1>
+
 
     <script type="text/javascript">
+        //window.onload = console.log(localStorage.getItem("product"))
+
+
+      window.addEventListener('load', function(){
+
+        //get productID from search
+        var productID = localStorage.getItem("product")
+
+        // product name to title, REPLACE WITH ACTUAL PRODUCT NAME
+        document.getElementById("prodName").innerHTML = productID;
+
         var w = window.innerWidth
         var h = window.innerHeight
         var barPadding = 50
@@ -72,8 +83,9 @@
 
 
         svg.call(tool_tip)
+        tool_tip.hide()
 
-        //Will need to generate this json {Aspects: Reviews} for all aspects
+        //DUMMY DATA, DELETE
         ReviewsJS = {
             "Size": ["This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."],
             "Style": ["This bag has great style!","I really like the design and style of this bag.", "This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."], "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"], "Shipping": ["Took so long to get delviered"], "Quality": ["Bad"]
@@ -82,13 +94,15 @@
         Scores = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", -0.6],
         ["Quality",-0.35], ["Shipping", -0.9]]
 
+
+        // bubbles have to have positive values
         Scores2 = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", 0.6],
         ["Quality",0.35], ["Shipping", 0.9]]
 
 
         // bubble chart
 
-        var maxSize = 500,
+        var maxSize = Math.min(w,h),
           color = d3.scale.category20b(); //color category
 
         var bubble = d3.layout.pack()
@@ -104,40 +118,40 @@
             .attr("class", "bubble");
 
 
-            var nodes = bubble.nodes({children:Scores2}).filter(function(d) { return !d.children; });
+        var nodes = bubble.nodes({children:Scores2}).filter(function(d) { return !d.children; });
 
-            //setup the chart
-            var bubbles = svg1.append("g")
-                .attr("transform", "translate(0,0)")
-                .selectAll(".bubble")
-                .data(nodes)
-                .enter();
+        // chart
+        var bubbles = svg1.append("g")
+            .attr("transform", "translate(0,0)")
+            .selectAll(".bubble")
+            .data(nodes)
+            .enter();
 
-            //create the bubbles
-            bubbles.append("circle")
-                .attr("r", function(d){ return d.r; })
-                .attr("cx", function(d){ return d.x; })
-                .attr("cy", function(d){ return d.y; })
-                .style("fill", function(d) { return color(d.value); })
-                .on("click", showGoodReview)
-                .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
-                .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')});
+        // create bubbles
+        bubbles.append("circle")
+            .attr("r", function(d){ return d.r; })
+            .attr("cx", function(d){ return d.x; })
+            .attr("cy", function(d){ return d.y; })
+            .style("fill", function(d) { return color(d.value); })
+            .on("click", showGoodReview)
+            .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
+            .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')});
 
 
-            //format the text for each bubble
-            bubbles.append("text")
-                .attr("x", function(d){ return d.x; })
-                .attr("y", function(d){ return d.y + 5; })
-                .attr("text-anchor", "middle")
-                .text(function(d){ return d[0]; })
-                .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
-                .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
-                .on("click", showGoodReview)
-                .style({
-                    "fill":"white",
-                    "font-family":"Helvetica Neue, Helvetica, Arial, san-serif",
-                    "font-size": "12px"
-                });
+        // bubble text
+        bubbles.append("text")
+            .attr("x", function(d){ return d.x; })
+            .attr("y", function(d){ return d.y + 5; })
+            .attr("text-anchor", "middle")
+            .text(function(d){ return d[0]; })
+            .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
+            .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')})
+            .on("click", showGoodReview)
+            .style({
+                "fill":"white",
+                "font-family":"Helvetica Neue, Helvetica, Arial, san-serif",
+                "font-size": "12px"
+            });
 
         //bar chart
 
@@ -238,8 +252,11 @@
               prevAspect = currentAspect
             }
         }
+      });
 
     </script>
+    <h1 style="margin-left: 25px";>Review Details: <span id="prodName"></span></h1>
+
 
 
 </body>

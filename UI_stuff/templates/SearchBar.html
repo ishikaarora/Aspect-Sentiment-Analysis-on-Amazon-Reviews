@@ -38,14 +38,43 @@
             left: 50%;
             transform: translate(-50%, -50%);
          }
+        .center2 {
+            position: fixed;
+            font-size: 16px;
+            top: 50%;
+            right: 22%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+         }
          body {background-color: #D3D3D3;}
         </style>
     </head>
-    <form>
-        <input type="text" name="searchBar" class="center" placeholder="Amazon Product ID">
+    <form onsubmit="redirect()">
+        <input type="text" name="searchBar" id="inputBox" class="center"
+        placeholder="Amazon Product ID" >
+
     </form>
     <body>
-         <i class="center1" >Type the Amazon Product ID and Press Enter</i>
+        <b class="center1" >Enter the Amazon Product ID </b>
+        <button class="center2" onclick="redirect()">Search</button>
+        <script type="text/javascript">
+
+            function redirect(){
+                prodID = document.getElementById("inputBox").value
+
+                //query here
+                if (prodID=="test123"){
+                    localStorage.setItem("product",prodID)
+                    window.open("http://127.0.0.1:5000/Review")
+                }
+                else {
+                    alert("Sorry, we can't find that product ID. Please try again!")
+                }
+
+
+            }
+
+        </script>
     </body>
 
 </html>
