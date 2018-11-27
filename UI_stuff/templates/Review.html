@@ -99,40 +99,62 @@
         Scores2 = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", 0.6],
         ["Quality",0.35], ["Shipping", 0.9]]
 
+        scoresJSON = [{"noun": "wire", "cluster": "wire"}, {"noun": "cable", "cluster": "wire"}, {"noun": "wire", "cluster": "wire"},{"noun": "another cable", "cluster": "wire"},{"noun": "another wire", "cluster": "wire"}, {"noun": "", "cluster": "wire"},{"noun": "wire2", "cluster": "wire"}, {"noun": "signal", "cluster": "signal"},{"noun": "more signal", "cluster": "signal"},{"noun": "even moresignal", "cluster": "signal"}, {"noun": "setting", "cluster": "signal"}, {"noun": "signal2", "cluster": "signal"},  {"noun": "test noun", "cluster": "product"},{"noun": "something", "cluster": "product"},{"noun": "something else", "cluster": "product"},{"noun": "different product", "cluster": "product"}, {"noun": "product", "cluster": "product"}]
 
-        // bubble chart
+
+        // determine number of unique clusters for bubble chart
+        Clusters = []
+        for(i=0;i<scoresJSON.length; i++){
+          if(!Clusters.includes(scoresJSON[i]["cluster"])) {
+            Clusters.push(scoresJSON[i]["cluster"])
+          }
+        }
+
+        // restructure data for bubble chart
+        Scores3 = []
+        for(i=0;i<scoresJSON.length; i++){
+          newList = []
+          if(scoresJSON[i]["noun"] != "") {
+            newList.push(scoresJSON[i]["noun"])
+            newList.push(scoresJSON[i]["cluster"])
+            //to keep all bubbles the same size
+            newList.push(1)
+          }
+          Scores3.push(newList)
+        }
+
+        console.log(Scores3)
 
         var maxSize = Math.min(w,h),
-          color = d3.scale.category20b(); //color category
+          color = d3.scale.category10(); //color category
 
         var bubble = d3.layout.pack()
             .sort(null)
             .size([maxSize, maxSize])
-            .value(function(d) {return d[1]})
+            .value(function(d) {return d[2]})
             .padding(1.5);
 
         var svg1 = d3.select("body")
             .append("svg")
-            .attr("width", maxSize)
-            .attr("height", maxSize)
+            .attr("width", w)
+            .attr("height", h)
             .attr("class", "bubble");
 
 
-        var nodes = bubble.nodes({children:Scores2}).filter(function(d) { return !d.children; });
+        nodes = bubble.nodes({children:Scores3}).filter(function(d) { return !d.children; });
 
-        // chart
         var bubbles = svg1.append("g")
             .attr("transform", "translate(0,0)")
             .selectAll(".bubble")
             .data(nodes)
             .enter();
 
-        // create bubbles
+
         bubbles.append("circle")
             .attr("r", function(d){ return d.r; })
             .attr("cx", function(d){ return d.x; })
             .attr("cy", function(d){ return d.y; })
-            .style("fill", function(d) { return color(d.value); })
+            .style("fill", function(d) { return color(d[1]); })
             .on("click", showGoodReview)
             .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
             .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')});
