@@ -29,7 +29,7 @@
         stroke: #000;
         shape-rendering: crispEdges;
       }
-      body {background-color: #D3D3D3;}
+      body {background-color: #F5F5F5;}
       .d3_tooltip {
         background: #484848;
         text-align: left;
@@ -75,12 +75,12 @@
         var svg = d3.select("body")
                 .append("svg")
                 .attr("width", w)
-                .attr("height", h*.9);
+                .attr("height", h*.9-100);
 
         var svg1 = d3.select("body")
             .append("svg")
             .attr("width", w)
-            .attr("height", h*.9)
+            .attr("height", h*.9-100)
 
         tool_tip = d3.tip()
            .attr("class", "d3_tooltip")
@@ -94,11 +94,17 @@
         svg.call(tool_tip)
         tool_tip.hide()
 
-        //DUMMY DATA, DELETE
+        ReviewsJS = {
+          "angle": ["Good solution to cord strain for an iPod or radio in your pocket. The right-angle will swivel in the jack instead of allowing certain movements to bend the cord at the plug."],"length": ["I needed this to be able to plug in the IR transmitter into the back of a Samsung TV that I mounted with a flush mount to the wall.  The plug fit perfectly and because of the short length that immediately bends 90 degrees the plug didn't cause the TV to st"], "movements": ["Good solution to cord strain for an iPod or radio in your pocket. The right-angle will swivel in the jack instead of allowing certain movements to bend the cord at the plug."], "adapter": ["This adapter is great for my laptop headphone cord which was getting bent. It does't look to be the best quality"], "cable": ["This item works as described"], "channel": ["I purchased this adapter to lessen the risk of breaking off my headphone jack"], "cord": ["I was really wanting to convert my durable 3.5mm iPad cord into a right angle. So I found this connector that I thought would do the trick. It does ok but doesn't seem to have secure connectivity. It is sort of easy to come unplugged. So I have just gone b"], "headphones": ["Both have worked just fine without any problems"],
+            "jack": ["This item works as described"], "mount": ["I needed this to be able to plug in the IR transmitter into the back of a Samsung TV that I mounted with a flush mount to the wall.  The plug fit perfectly and because of the short length that immediately bends 90 degrees the plug didn't cause the TV to st"], "plug": ["This item works as described"], "transmitter": ["I needed this to be able to plug in the IR transmitter into the back of a Samsung TV that I mounted with a flush mount to the wall.  The plug fit perfectly and because of the short length that immediately bends 90 degrees the plug didn't cause the TV to st"], "fashion": ["I purchased this adapter to lessen the risk of breaking off my headphone jack"], "jacket": ["Jacket is large"], "jackets": ["Jacket is large"], "one": ["I purchased this adapter to lessen the risk of breaking off my headphone jack"],"piece": ["This item works as described"], "product": ["good quality product"], "quality": ["This adapter is great for my laptop headphone cord which was getting bent. It does't look to be the best quality"], "set": ["I purchased this adapter to lessen the risk of breaking off my headphone jack"], "solution": ["Good solution to cord strain for an iPod or radio in your pocket. The right-angle will swivel in the jack instead of allowing certain movements to bend the cord at the plug."], "sounds": ["I purchased this adapter to lessen the risk of breaking off my headphone jack"], "use": ["This item works as described"], "value": ["This item works as described"]
+        }
+
+
+        /*DUMMY DATA, DELETE
         ReviewsJS = {
             "Size": ["This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."],
             "Style": ["This bag has great style!","I really like the design and style of this bag.", "This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."], "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"], "Shipping": ["Took so long to get delviered"], "Quality": ["Bad"]
-        }
+        }*/
 
         Scores = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", -0.6],
         ["Quality",-0.35], ["Shipping", -0.9]]
@@ -190,7 +196,7 @@
             .attr("y", h/20-20)
 
 
-        var maxSize = Math.min(w,h)
+        var maxSize = Math.min(w,h*.9-100)
         color = d3.scale.category10();
 
         var bubble = d3.layout.pack()
@@ -238,11 +244,11 @@
 
         var scaleX = d3.scale.linear()
           .domain(d3.extent(Scores, function(d) { return d[1]; }))
-          .range([barPadding, w-barPadding]);
+          .range([barPadding/2, w-barPadding/2]);
 
         var scaleY = d3.scale.ordinal()
           .domain(Scores.map(function(d) { return d[0]; }))
-          .rangeRoundBands([barPadding, graphH], .2);
+          .rangeRoundBands([20, h*.9-200], .2);
 
         svg.selectAll("rect")
           .data(Scores)
@@ -268,9 +274,11 @@
           .tickSize(0)
           .tickPadding(6);
 
+        console.log(h*.9-100)
+        barheight = h*.9-200
         svg.append("g")
           .attr("class", "x axis")
-          .attr("transform", "translate(0," +graphH+ ")")
+          .attr("transform", "translate(0,"+barheight+")")
           .call(xAxis);
 
         svg.append("g")
@@ -278,15 +286,16 @@
           .attr("transform", "translate(" + scaleX(0) + ",0)")
           .call(yAxis);
 
-
-        barHeader = [0, "Product Feature Score"]
-        svg.append("text")
+        barHeader = [0, "Feature Group Score"]
+        svg0.append("text")
           .text(barHeader[1])
           .attr("x", scaleX(barHeader[0]))
-          .attr("y", barPadding-10)
+          .attr("y", )
+          .attr("font-size", "18px")
+          .attr("font-weight", "bold")
+          .style("text-anchor", "middle")
           .attr("font-family", "sans-serif")
-          .attr("font-size", "26px")
-          .attr("text-anchor", "middle")
+          .style("dominant-baseline", "middle")
 
         /* Do we need this anymore
         bubbleHeader = ["Click a bubble to see related reviews!"]
