@@ -1,11 +1,13 @@
-# Aspect-Sentiment-Analysis-on-Amazon-Reviews
+# Aspect-and-Opinion-Extraction-on-Amazon-Reviews
 
 Project Repository for CSE-6242 course.
 
 
-It will be better for us to coordinate different packages using conda environment. Added is the requirements.txt file.
+The folder structure of the package is mentioned below -
+/data - Contains all the required data files
+/src - Contains all the code files
+/UI - Contains the required files for seeing the Visualisation
 
-Use this -
 
 
 `conda create --name <env> --file requirements.txt`

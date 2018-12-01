@@ -22,7 +22,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 BASE_PATH = os.getcwd()
 PARENT = os.path.dirname(BASE_PATH)
-CRED_PATH = BASE_PATH + "/data/credentials.txt"
+# CRED_PATH = BASE_PATH + "/data/credentials.txt"
 
 #USE THIS FOR IMPORTING ANY FUNCTIONS FROM src
 sys.path.insert(0,BASE_PATH)
@@ -37,7 +37,7 @@ def fetch_reviews(filepath,usecols = None):
 def fetch_s3(filename,usecols = None):
     s3_basepath = 's3://amazon-reviews-pds/tsv/'
     s3_fullpath = s3_basepath + filename
-    raw_data = pd.read_table(s3_fullpath, compression = 'gzip',error_bad_lines=False,chunksize=100000, usecols=usecols)
+    raw_data = pd.read_table(s3_fullpath, compression = 'gzip',error_bad_lines=False,chunksize=100000,usecols=usecols)
     return raw_data
 
 
@@ -46,7 +46,7 @@ def apply_extraction(row,nlp,sid):
     review_id = row['review_id']
     # review_marketplace = row['marketplace']
     # customer_id = row['customer_id']
-    # product_id = row['product_id']
+    product_id = row['product_id']
     # product_parent = row['product_parent']
     # product_title = row['product_title']
     # product_category = row['product_category']
@@ -57,12 +57,19 @@ def apply_extraction(row,nlp,sid):
 
 
     doc=nlp(review_body)
-
+    #print("--- SPACY : Doc loaded ---")
 
     ## FIRST RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
     ## RULE = M is child of A with a relationshio of amod
     rule1_pairs = []
+    rule2_pairs = []
+    rule3_pairs = []
+    rule4_pairs = []
+    rule5_pairs = []
+    rule6_pairs = []
+    rule7_pairs = []
+
     for token in doc:
         A = "999999"
         M = "999999"
@@ -92,14 +99,13 @@ def apply_extraction(row,nlp,sid):
             dict1 = {"noun" : A, "adj" : M, "rule" : 1, "polarity" : sid.polarity_scores(token.text)['compound']}
             rule1_pairs.append(dict1)
 
-    ## SECOND RULE OF DEPENDANCY PARSE -
-    ## M - Sentiment modifier || A - Aspect
-    #Direct Object - A is a child of something with relationship of nsubj, while
-    # M is a child of the same something with relationship of dobj
-    #Assumption - A verb will have only one NSUBJ and DOBJ
+        # print("--- SPACY : Rule 1 Done ---")
 
-    rule2_pairs = []
-    for token in doc:
+        # # SECOND RULE OF DEPENDANCY PARSE -
+        # # M - Sentiment modifier || A - Aspect
+        # Direct Object - A is a child of something with relationship of nsubj, while
+        # M is a child of the same something with relationship of dobj
+        # Assumption - A verb will have only one NSUBJ and DOBJ
         children = token.children
         A = "999999"
         M = "999999"
@@ -126,21 +132,17 @@ def apply_extraction(row,nlp,sid):
             dict2 = {"noun" : A, "adj" : M, "rule" : 2, "polarity" : sid.polarity_scores(token.text)['compound']}
             rule2_pairs.append(dict2)
 
-            #rule2_pairs.append((A, M,sid.polarity_scores(M)['compound'],2))
-
-
-    ## THIRD RULE OF DEPENDANCY PARSE -
-    ## M - Sentiment modifier || A - Aspect
-    ## Adjectival Complement - A is a child of something with relationship of nsubj, while
-    ## M is a child of the same something with relationship of acomp
-    ## Assumption - A verb will have only one NSUBJ and DOBJ
-    ## "The sound of the speakers would be better. The sound of the speakers could be better" - handled using AUX dependency
 
 
 
-    rule3_pairs = []
+        # print("--- SPACY : Rule 2 Done ---")
 
-    for token in doc:
+        ## THIRD RULE OF DEPENDANCY PARSE -
+        ## M - Sentiment modifier || A - Aspect
+        ## Adjectival Complement - A is a child of something with relationship of nsubj, while
+        ## M is a child of the same something with relationship of acomp
+        ## Assumption - A verb will have only one NSUBJ and DOBJ
+        ## "The sound of the speakers would be better. The sound of the speakers could be better" - handled using AUX dependency
 
         children = token.children
         A = "999999"
@@ -173,18 +175,15 @@ def apply_extraction(row,nlp,sid):
             dict3 = {"noun" : A, "adj" : M, "rule" : 3, "polarity" : sid.polarity_scores(token.text)['compound']}
             rule3_pairs.append(dict3)
             #rule3_pairs.append((A, M, sid.polarity_scores(M)['compound'],3))
+    # print("--- SPACY : Rule 3 Done ---")
 
-    ## FOURTH RULE OF DEPENDANCY PARSE -
-    ## M - Sentiment modifier || A - Aspect
+        ## FOURTH RULE OF DEPENDANCY PARSE -
+        ## M - Sentiment modifier || A - Aspect
 
-    #Adverbial modifier to a passive verb - A is a child of something with relationship of nsubjpass, while
-    # M is a child of the same something with relationship of advmod
+        #Adverbial modifier to a passive verb - A is a child of something with relationship of nsubjpass, while
+        # M is a child of the same something with relationship of advmod
 
-    #Assumption - A verb will have only one NSUBJ and DOBJ
-
-    rule4_pairs = []
-    for token in doc:
-
+        #Assumption - A verb will have only one NSUBJ and DOBJ
 
         children = token.children
         A = "999999"
@@ -219,17 +218,17 @@ def apply_extraction(row,nlp,sid):
             rule4_pairs.append(dict4)
             #rule4_pairs.append((A, M,sid.polarity_scores(M)['compound'],4)) # )
 
+    # print("--- SPACY : Rule 4 Done ---")
 
-    ## FIFTH RULE OF DEPENDANCY PARSE -
-    ## M - Sentiment modifier || A - Aspect
 
-    #Complement of a copular verb - A is a child of M with relationship of nsubj, while
-    # M has a child with relationship of cop
+        ## FIFTH RULE OF DEPENDANCY PARSE -
+        ## M - Sentiment modifier || A - Aspect
 
-    #Assumption - A verb will have only one NSUBJ and DOBJ
+        #Complement of a copular verb - A is a child of M with relationship of nsubj, while
+        # M has a child with relationship of cop
 
-    rule5_pairs = []
-    for token in doc:
+        #Assumption - A verb will have only one NSUBJ and DOBJ
+
         children = token.children
         A = "999999"
         buf_var = "999999"
@@ -249,14 +248,12 @@ def apply_extraction(row,nlp,sid):
             rule5_pairs.append(dict5)
             #rule5_pairs.append((A, token.text,sid.polarity_scores(token.text)['compound'],5))
 
+    # print("--- SPACY : Rule 5 Done ---")
 
-    ## SIXTH RULE OF DEPENDANCY PARSE -
-    ## M - Sentiment modifier || A - Aspect
-    ## Example - "It ok", "ok" is INTJ (interjections like bravo, great etc)
+        ## SIXTH RULE OF DEPENDANCY PARSE -
+        ## M - Sentiment modifier || A - Aspect
+        ## Example - "It ok", "ok" is INTJ (interjections like bravo, great etc)
 
-
-    rule6_pairs = []
-    for token in doc:
         children = token.children
         A = "999999"
         M = "999999"
@@ -275,14 +272,13 @@ def apply_extraction(row,nlp,sid):
 
             #rule6_pairs.append((A, M,sid.polarity_scores(M)['compound'],6))
 
+    # print("--- SPACY : Rule 6 Done ---")
 
     ## SEVENTH RULE OF DEPENDANCY PARSE -
     ## M - Sentiment modifier || A - Aspect
     ## ATTR - link between a verb like 'be/seem/appear' and its complement
     ## Example: 'this is garbage' -> (this, garbage)
 
-    rule7_pairs = []
-    for token in doc:
         children = token.children
         A = "999999"
         M = "999999"
@@ -312,6 +308,8 @@ def apply_extraction(row,nlp,sid):
 
 
 
+    #print("--- SPACY : Rules Done ---")
+
 
     aspects = []
 
@@ -324,45 +322,8 @@ def apply_extraction(row,nlp,sid):
     # , "customer_id" : customer_id, "product_id" : product_id, "product_parent" : product_parent,
     # "product_title" : product_title, "product_category" : product_category, "date" : date, "star_rating" : star_rating, "url" : url}
 
-    dic = {"review_id" : review_id , "aspect_pairs" : aspects}
+    dic = {"product_id" : product_id ,"review_id" : review_id , "aspect_pairs" : aspects}
     return dic
-
-
-# def init_spacy():
-#     print("Loading Spacy")
-#     nlp=spacy.load("en_core_web_lg")
-#     for w in stopwords:
-#         nlp.vocab[w].is_stop = True
-#     for w in exclude_stopwords:
-#         nlp.vocab[w].is_stop = False
-#     return nlp
-#
-# def init_nltk():
-#     print("\nLoading NLTK....")
-#     try :
-#         sid = SentimentIntensityAnalyzer()
-#     except LookupError:
-#         print("Please install SentimentAnalyzer using : nltk.download('vader_lexicon')")
-#     print("NLTK successfully loaded")
-#     return(sid)
-#
-# def spell_check_init():
-#     spell_dict = enchant.Dict("en_US")
-#     return spell_dict
-#
-# def check_spelling(word):
-#     spell_dict = spell_check_init()
-#     if not spell_dict.check(word):
-#         list_of_words = spell_dict.suggest(word)
-#         #print(list_of_words)
-#         with open('spelling.txt', 'a') as f:
-#             f.write("%s :" % word)
-#
-#             for item in list_of_words:
-#
-#                 f.write("%s ," % item)
-#
-#             f.write("\n")
 
 
 def extract_aspects(reviews,nlp,sid):
@@ -377,13 +338,13 @@ def extract_aspects(reviews,nlp,sid):
 
 
 def aspect_extraction(nlp,sid):
-    usecols =  ['review_id','review_body']
+    usecols =  ['review_id','review_body','product_id']
 
     # filepath = BASE_PATH + "/data/raw/amazon_reviews_us_Electronics_v1_00.tsv"
     # reviews =  fetch_reviews(filepath,usecols)
 
     # UNCOMMENT THIS WHEN RUNNING ON AWS
-    s3_filename = "amazon_reviews_us_Wireless_v1_00.tsv.gz"
+    s3_filename = "amazon_reviews_us_Electronics_v1_00.tsv.gz"
     raw_data = fetch_s3(s3_filename, usecols)
 
     # reviews = clean_data.clean_data(reviews)
@@ -402,7 +363,7 @@ def aspect_extraction(nlp,sid):
         time_start_1 = time()
         print("Appending to JSON FIle")
         aspect_list = list(aspect_list)
-        with open('reviews_Nov24.json', 'a') as outfile:
+        with open('data/interim/reviews_aspect_raw.json', 'a') as outfile:
             json.dump(aspect_list, outfile)
         time_end_1 = time()
         print("Time for Writing: {0:.2}s".format(time_end_1-time_start_1))
