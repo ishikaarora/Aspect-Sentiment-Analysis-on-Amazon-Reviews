@@ -9,3 +9,4 @@ Temporary Items
 data/
 __pycache__/
 boto.cfg
+.ipynb_checkpoints
