@@ -23,7 +23,6 @@
      .axis text {
         font: 20px sans-serif;
       }
-
       .axis path,
       .axis line {
         fill: none;
@@ -51,19 +50,39 @@
 
     <script type="text/javascript">
 
-      window.addEventListener('load', function(){
+      //window.addEventListener('load', function(){
+
+      var bubbleJSON;
+      var barJSON;
+      var prodID;
+
+      function loadData() {
+      $.get('http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/users/product/B000068O48',function(response) {
+            bubbleJSON = response["bubble"]
+            barJSON = response["bar"]
+            prodID = response["title"][0]["productTitle"]
+            console.log(response["bar"]);
+          }
+      )}
+
+      loadData();
+
+      setTimeout(function() {
+        console.log("STARTED")
 
         // get productID from search
-        var productID = localStorage.getItem("product")
+        //var productID = localStorage.getItem("product")
 
         // product name to title, REPLACE WITH ACTUAL PRODUCT NAME
         // document.getElementById("prodName").innerHTML = productID;
-        document.getElementById("prodName").innerHTML = "TRS Adapter";
+        document.getElementById("prodName").innerHTML = prodID;
 
         // CHANGE WHEN FEED IS LIVE restructure data
         // SAMPLE INPUT DATA
 
-        bubbleJSON = [ {"aspect": "product", "cluster": "product", "score": 5, "review": "good quality product"}, {"aspect": "sounds", "cluster": "product", "score": 4, "review": "I purchased this adapter to lessen the risk of breaking off my headphone jack"},
+
+
+        /*bubbleJSON = [ {"aspect": "product", "cluster": "product", "score": 5, "review": "good quality product"}, {"aspect": "sounds", "cluster": "product", "score": 4, "review": "I purchased this adapter to lessen the risk of breaking off my headphone jack"},
           {"aspect": "length", "cluster": "angle", "score": 1, "review": "I needed this to be able to plug in the IR transmitter into the back of a Samsung TV that I mounted with a flush mount to the wall.  The plug fit perfectly and because of the short length that immediately bends 90 degrees the plug didn't cause the TV to st"}
         ]
 
@@ -71,15 +90,15 @@
                     {"cluster": "cord", "score": 0},
                     {"cluster": "jackets", "score": 0.0},
                     {"cluster": "product", "score": 0.1}]
-
+        */
 
         // convert to array of arrays for bubble chart
         bubblesList = []
         for (i=0; i<bubbleJSON.length; i++){
           var newRow = []
-          newRow.push(bubbleJSON[i]["aspect"])
-          newRow.push(bubbleJSON[i]["cluster"])
-          newRow.push(bubbleJSON[i]["score"])
+          newRow.push(bubbleJSON[i]["Noun"])
+          newRow.push(bubbleJSON[i]["Cluster"])
+          newRow.push(bubbleJSON[i]["CountOfNouns"])
           bubblesList.push(newRow)
         }
 
@@ -87,8 +106,15 @@
         for (i=0; i<barJSON.length; i++){
           var newrow = []
           newrow.push(barJSON[i]["cluster"])
-          newrow.push(barJSON[i]["score"])
+          newrow.push(barJSON[i]["polarity"])
           barScores.push(newrow)
+        }
+
+        // make non-zero to make graph display better
+        for (i=0; i<barScores.length; i++){
+          if (barScores[i][1] == 0) {
+            barScores[i][1] = -0.001
+          }
         }
 
         var w = window.innerWidth/2 - 20
@@ -140,10 +166,10 @@
 
 
         // determine number of unique clusters for bubble chart
-        Clusters = []
+        clusters = []
         for(i=0;i<bubbleJSON.length; i++){
-          if(!Clusters.includes(bubbleJSON[i]["cluster"])) {
-            Clusters.push(bubbleJSON[i]["cluster"])
+          if(!clusters.includes(bubbleJSON[i]["cluster"])) {
+            clusters.push(bubbleJSON[i]["cluster"])
           }
         }
 
@@ -160,7 +186,7 @@
         }*/
 
         //data for screenshot
-        Scores4 = [["product", "product", 5], ["sounds", "product", 4],
+        /*Scores4 = [["product", "product", 5], ["sounds", "product", 4],
                   ["one", "product", 3],["quality", "product", 2],
                   ["set", "product", 1],["solution", "product", 1],
                   ["piece", "product", 1],["use", "product", 1],
@@ -172,7 +198,7 @@
                   ["mount", "cord", 1],["plug", "cord", 1],
                   ["transmitter", "cord", 1],["fashion", "jackets", 1],
                   ["jacket", "jackets", 1],["jackets", "jackets", 1],]
-        clusters = ["product", "angle", "cord", "jackets"]
+        clusters = ["product", "angle", "cord", "jackets"]*/
 
         // CHANGE TO AUTOMATE THIS LEGEND
 
@@ -237,7 +263,7 @@
             .padding(1.5);
 
 
-        nodes = bubble.nodes({children:Scores4}).filter(function(d) { return !d.children; });
+        nodes = bubble.nodes({children:bubblesList}).filter(function(d) { return !d.children; });
 
         var bubbles = svg1.append("g")
             .attr("transform", "translate(0,0)")
@@ -281,7 +307,6 @@
           .domain(barScores.map(function(d) { return d[0]; }))
           .rangeRoundBands([20, h*.9-200], .2);
 
-                //green and red "#2ca02c","#d62728",
 
         svg.selectAll("rect")
           .data(barScores)
@@ -300,7 +325,7 @@
 
         var yAxis = d3.svg.axis()
           .scale(scaleY)
-          .orient("left")
+          .orient("right")
           .tickSize(0)
           .tickPadding(6);
 
@@ -318,7 +343,7 @@
         barHeader = [0, "Feature Group Text Analysis Score"]
         svg0.append("text")
           .text(barHeader[1])
-          .attr("x", scaleX(barHeader[0]))
+          .attr("x", w/2)
           .attr("y", h/8 - 10)
           .attr("font-size", "22px")
           .attr("font-weight", "bold")
@@ -331,13 +356,10 @@
         function showGoodReview() {
           currentAspect = this.__data__[0]
 
-          //DELETE previous way
-          //Reviews = ReviewsJS[currentAspect]
-
           Review = []
           for(i=0; i<bubbleJSON.length; i++){
-            if(bubbleJSON[i]["aspect"] == currentAspect) {
-              Review = bubbleJSON[i]["review"]
+            if(bubbleJSON[i]["Noun"] == currentAspect) {
+              Review = bubbleJSON[i]["Review"]
             }
           }
 
@@ -347,12 +369,6 @@
           if(toPrint=="\"\""){
             toPrint="Sorry, we are unable to find any reviews for this aspect"
           }
-          /*for (i=0; i<Reviews.length; i++){
-            toPrint.push("\"")
-            toPrint.push(Reviews[i])
-            toPrint.push("\"")
-          }
-          toPrint = toPrint.join("");*/
 
           if(clicked && prevAspect==currentAspect ) {
             tool_tip.hide(toPrint)
@@ -368,8 +384,10 @@
               tool_tip.show(toPrint)
               prevAspect = currentAspect
             }
-        }
-      });
+          }
+        },10000);
+
+
 
     </script>
     <h1 style="margin-left: 25px";><span id="prodName"></span></h1>

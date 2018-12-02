@@ -94,7 +94,32 @@
 
             */
 
-            /*
+                //B000068O48
+
+                prodID = document.getElementById("inputBox").value
+                url2 = 'http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/users/product/'+prodID
+                $.get('http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/users/product/B000068O48', function(response) {
+                        console.log(response);
+                    }
+                )
+
+                /*
+                obj = 0;
+                prodID = document.getElementById("inputBox").value
+                $.get('http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/'+prodID,
+                    function(response) {
+                    console.log("Function Starting Query")
+                    obj=JSON.parse(reponse)
+                    console.log(response);
+                if (obj["count"] == 0) {
+                        alert("Sorry, we can't find that product ID. Please try again!")
+                } else {
+                    localStorage.setItem("product",prodID)
+                    window.open('http://127.0.0.1:5000/Review')
+                }
+                });
+
+
 
             function redirect() {
                 console.log("Starting Query")
@@ -114,7 +139,7 @@
                 });
 
             }
-            */
+
 
             /*
             $.ajax({
@@ -171,8 +196,8 @@
         <button class="center2" id="button1">Search</button>
         <script type="text/javascript">
 
-            //function redirect(){}
-                //prodID = document.getElementById("inputBox").value
+            function redirect(){}
+                prodID = document.getElementById("inputBox").value
 
                 //window.open("http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/"+prodID)
                 //query here
