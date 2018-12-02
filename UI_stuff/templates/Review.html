@@ -13,6 +13,7 @@
 
      <script type="text/javascript" src="../static/D3/d3.v3.min.js"></script>
      <script type="text/javascript" src="../static/D3/d3.tip.v0.6.3.js"></script>
+     <script type="text/javascript" src="../static/D3/d3-queue.v3.min.js"></script>
      <link href="static/css/bootstrap.min.css" rel="stylesheet">
 
      <script language="JavaScript" type="text/javascript"
@@ -35,7 +36,7 @@
         text-align: left;
         font-size: 8;
         font-color: #FFFFFF;
-        height: 150px;
+        height: 75px;
         width: 30%;
         border-radius: 5px;
         opacity: 60%;
@@ -52,12 +53,43 @@
 
       window.addEventListener('load', function(){
 
-        //get productID from search
+        // get productID from search
         var productID = localStorage.getItem("product")
 
         // product name to title, REPLACE WITH ACTUAL PRODUCT NAME
-        //document.getElementById("prodName").innerHTML = productID;
+        // document.getElementById("prodName").innerHTML = productID;
         document.getElementById("prodName").innerHTML = "TRS Adapter";
+
+        // CHANGE WHEN FEED IS LIVE restructure data
+        // SAMPLE INPUT DATA
+
+        bubbleJSON = [ {"aspect": "product", "cluster": "product", "score": 5, "review": "good quality product"}, {"aspect": "sounds", "cluster": "product", "score": 4, "review": "I purchased this adapter to lessen the risk of breaking off my headphone jack"},
+          {"aspect": "length", "cluster": "angle", "score": 1, "review": "I needed this to be able to plug in the IR transmitter into the back of a Samsung TV that I mounted with a flush mount to the wall.  The plug fit perfectly and because of the short length that immediately bends 90 degrees the plug didn't cause the TV to st"}
+        ]
+
+        barJSON = [ {"cluster": "angle", "score": 4.55},
+                    {"cluster": "cord", "score": 0},
+                    {"cluster": "jackets", "score": 0.0},
+                    {"cluster": "product", "score": 0.1}]
+
+
+        // convert to array of arrays for bubble chart
+        bubblesList = []
+        for (i=0; i<bubbleJSON.length; i++){
+          var newRow = []
+          newRow.push(bubbleJSON[i]["aspect"])
+          newRow.push(bubbleJSON[i]["cluster"])
+          newRow.push(bubbleJSON[i]["score"])
+          bubblesList.push(newRow)
+        }
+
+        barScores = []
+        for (i=0; i<barJSON.length; i++){
+          var newrow = []
+          newrow.push(barJSON[i]["cluster"])
+          newrow.push(barJSON[i]["score"])
+          barScores.push(newrow)
+        }
 
         var w = window.innerWidth/2 - 20
         var h = window.innerHeight
@@ -70,7 +102,7 @@
         var svg0 = d3.select("body")
                 .append("svg")
                 .attr("width", w*2)
-                .attr("height", h/10);
+                .attr("height", h/8);
 
         var svg = d3.select("body")
                 .append("svg")
@@ -84,15 +116,16 @@
 
         tool_tip = d3.tip()
            .attr("class", "d3_tooltip")
-           .offset([0,w/6])
+           .offset([0,-w/3])
            .html(function(d) {
-            return"<center><strong style=\"color: #FFFFFF\">Reviews</strong></center>\
-            <p style=\"color: #FFFFFF\">"+d+"</p>"
+            return "<p style=\"font-family: sans-serif; color: #FFFFFF;\">"+d+"</p>"
             })
-
 
         svg.call(tool_tip)
         tool_tip.hide()
+
+
+        /* DELETE - Initial data for screenshot
 
         ReviewsJS = {
           "angle": ["Good solution to cord strain for an iPod or radio in your pocket. The right-angle will swivel in the jack instead of allowing certain movements to bend the cord at the plug."],"length": ["I needed this to be able to plug in the IR transmitter into the back of a Samsung TV that I mounted with a flush mount to the wall.  The plug fit perfectly and because of the short length that immediately bends 90 degrees the plug didn't cause the TV to st"], "movements": ["Good solution to cord strain for an iPod or radio in your pocket. The right-angle will swivel in the jack instead of allowing certain movements to bend the cord at the plug."], "adapter": ["This adapter is great for my laptop headphone cord which was getting bent. It does't look to be the best quality"], "cable": ["This item works as described"], "channel": ["I purchased this adapter to lessen the risk of breaking off my headphone jack"], "cord": ["I was really wanting to convert my durable 3.5mm iPad cord into a right angle. So I found this connector that I thought would do the trick. It does ok but doesn't seem to have secure connectivity. It is sort of easy to come unplugged. So I have just gone b"], "headphones": ["Both have worked just fine without any problems"],
@@ -100,32 +133,21 @@
         }
 
 
-        /*DUMMY DATA, DELETE
-        ReviewsJS = {
-            "Size": ["This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."],
-            "Style": ["This bag has great style!","I really like the design and style of this bag.", "This is a great bag for a day on the beach. It is not waterproof, but it is not supposed to be. I use it every weekend and like the size and simple style."], "Material": ["Brought it on vacation for a week and one of the straps is already tearing.", "The material is a little cheaply made, however for the price, that is expected."], "Price": ["Too Expensive!", "This bag is not worth the price!"], "Shipping": ["Took so long to get delviered"], "Quality": ["Bad"]
-        }*/
-
-        Scores = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", -0.6],
-        ["Quality",-0.35], ["Shipping", -0.9]]
+        Scores = [["angle", 2.1], ["cord", -2.2], ["product", 1.2], ["jackets", -1.6]]
 
 
-        // bubbles have to have positive values
-        Scores2 = [["Size", 0.4], ["Style", 0.8], ["Material", 0.2], ["Price", 0.6],
-        ["Quality",0.35], ["Shipping", 0.9]]
-
-        scoresJSON = [{"noun": "wire", "cluster": "wire"}, {"noun": "cable", "cluster": "wire"}, {"noun": "wire", "cluster": "wire"},{"noun": "another cable", "cluster": "wire"},{"noun": "another wire", "cluster": "wire"}, {"noun": "", "cluster": "wire"},{"noun": "wire2", "cluster": "wire"}, {"noun": "signal", "cluster": "signal"},{"noun": "more signal", "cluster": "signal"},{"noun": "even moresignal", "cluster": "signal"}, {"noun": "setting", "cluster": "signal"}, {"noun": "signal2", "cluster": "signal"},  {"noun": "test noun", "cluster": "product"},{"noun": "something", "cluster": "product"},{"noun": "something else", "cluster": "product"},{"noun": "different product", "cluster": "product"}, {"noun": "product", "cluster": "product"}]
+        scoresJSON = [{"noun": "wire", "cluster": "wire"}, {"noun": "cable", "cluster": "wire"}, {"noun": "wire", "cluster": "wire"},{"noun": "another cable", "cluster": "wire"},{"noun": "another wire", "cluster": "wire"}, {"noun": "", "cluster": "wire"},{"noun": "wire2", "cluster": "wire"}, {"noun": "signal", "cluster": "signal"},{"noun": "more signal", "cluster": "signal"},{"noun": "even moresignal", "cluster": "signal"}, {"noun": "setting", "cluster": "signal"}, {"noun": "signal2", "cluster": "signal"},  {"noun": "test noun", "cluster": "product"},{"noun": "something", "cluster": "product"},{"noun": "something else", "cluster": "product"},{"noun": "different product", "cluster": "product"}, {"noun": "product", "cluster": "product"}] */
 
 
         // determine number of unique clusters for bubble chart
         Clusters = []
-        for(i=0;i<scoresJSON.length; i++){
-          if(!Clusters.includes(scoresJSON[i]["cluster"])) {
-            Clusters.push(scoresJSON[i]["cluster"])
+        for(i=0;i<bubbleJSON.length; i++){
+          if(!Clusters.includes(bubbleJSON[i]["cluster"])) {
+            Clusters.push(bubbleJSON[i]["cluster"])
           }
         }
 
-        // restructure data for bubble chart
+        /* restructure data for bubble chart
         Scores3 = []
         for(i=0;i<scoresJSON.length; i++){
           newList = []
@@ -135,7 +157,7 @@
             newList.push(1)
           }
           Scores3.push(newList)
-        }
+        }*/
 
         //data for screenshot
         Scores4 = [["product", "product", 5], ["sounds", "product", 4],
@@ -156,11 +178,12 @@
 
         var x_scale_leg = d3.scale.ordinal()
           .domain(clusters)
-          .rangeBands([w+barPadding/2,2*w-barPadding/2])
+          .rangeBands([w,2*w])
 
         var col_scale_leg = d3.scale.ordinal()
           .domain(clusters)
-          .range(["#1f77b4","#ff7f0e","#2ca02c","#d62728"])/*,"#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"]])*/
+          .range(["#1f77b4","#ff7f0e","#9467bd","#8c564b","#17becf","#bcbd22","#e377c2",
+            ])
 
         svg0.selectAll("rect_leg")
           .data(clusters)
@@ -169,7 +192,7 @@
           .attr("width", 100)
           .attr("height", 30)
           .attr("x", function(d) { return x_scale_leg(d)})
-          .attr("y",  h/20)
+          .attr("y",  h/8 - 30)
           .attr("fill", function(d) { return col_scale_leg(d)})
 
         svg0.selectAll("text_leg")
@@ -178,7 +201,7 @@
           .append("text")
           .text(function(d) { return d})
           .attr("x", function(d) { return x_scale_leg(d)+50})
-          .attr("y",  h/20+15)
+          .attr("y",  h/8-15)
           .attr("font-family", "sans-serif")
           .style("fill", "white")
           .style("dominant-baseline", "middle")
@@ -186,15 +209,23 @@
 
         //legend title
         svg0.append('text')
-            .text("Grouping of Features Appearing in Reviews, Sized by Frequency")
-            .attr("font-size", "18px")
+            .text("Grouping of Features Appearing in Reviews")
+            .attr("font-size", "22px")
             .attr("font-weight", "bold")
             .style("text-anchor", "middle")
             .attr("font-family", "sans-serif")
             .style("dominant-baseline", "middle")
-            .attr("x", 1.5*w-12)
-            .attr("y", h/20-20)
+            .attr("x", 1.5*w-20)
+            .attr("y", 10)
 
+        svg0.append('text')
+            .text("Sized by frequency, click an aspect to view reviews!")
+            .attr("font-size", "18px")
+            .style("text-anchor", "middle")
+            .attr("font-family", "sans-serif")
+            .style("dominant-baseline", "middle")
+            .attr("x", 1.5*w-20)
+            .attr("y", 40)
 
         var maxSize = Math.min(w,h*.9-100)
         color = d3.scale.category10();
@@ -219,7 +250,7 @@
             .attr("r", function(d){ return d.r; })
             .attr("cx", function(d){ return d.x; })
             .attr("cy", function(d){ return d.y; })
-            .style("fill", function(d) { return color(d[1]); })
+            .style("fill", function(d) { return col_scale_leg(d[1]); })
             .on("click", showGoodReview)
             .on("mouseover", function(d) { d3.select(this).style("cursor", 'pointer')})
             .on("mouseout", function(d) { d3.select(this).style("cursor", 'default')});
@@ -243,26 +274,25 @@
         //bar chart
 
         var scaleX = d3.scale.linear()
-          .domain(d3.extent(Scores, function(d) { return d[1]; }))
-          .range([barPadding/2, w-barPadding/2]);
+          .domain(d3.extent(barScores, function(d) { return d[1]; }))
+          .range([barPadding, w-barPadding]);
 
         var scaleY = d3.scale.ordinal()
-          .domain(Scores.map(function(d) { return d[0]; }))
+          .domain(barScores.map(function(d) { return d[0]; }))
           .rangeRoundBands([20, h*.9-200], .2);
 
+                //green and red "#2ca02c","#d62728",
+
         svg.selectAll("rect")
-          .data(Scores)
+          .data(barScores)
           .enter()
           .append("rect")
-          .attr("fill", function(d) {
-            if(d[1] > 0) { return "#a3d76e" } else {
-              return "rgba(216, 137, 137, 0.6)"}})
+          .attr("fill", function(d) { if(d[1] < 0) {return "#d62728"}
+                            else {return "#2ca02c"}})
           .attr("x", function(d) { return scaleX(Math.min(0, d[1])); })
           .attr("y", function(d) { return scaleY(d[0]); })
           .attr("width", function(d) { return Math.abs(scaleX(d[1]) - scaleX(0)); })
           .attr("height", scaleY.rangeBand());
-
-
 
         var xAxis = d3.svg.axis()
           .scale(scaleX)
@@ -274,7 +304,6 @@
           .tickSize(0)
           .tickPadding(6);
 
-        console.log(h*.9-100)
         barheight = h*.9-200
         svg.append("g")
           .attr("class", "x axis")
@@ -286,47 +315,44 @@
           .attr("transform", "translate(" + scaleX(0) + ",0)")
           .call(yAxis);
 
-        barHeader = [0, "Feature Group Score"]
+        barHeader = [0, "Feature Group Text Analysis Score"]
         svg0.append("text")
           .text(barHeader[1])
           .attr("x", scaleX(barHeader[0]))
-          .attr("y", )
-          .attr("font-size", "18px")
+          .attr("y", h/8 - 10)
+          .attr("font-size", "22px")
           .attr("font-weight", "bold")
           .style("text-anchor", "middle")
           .attr("font-family", "sans-serif")
-          .style("dominant-baseline", "middle")
-
-        /* Do we need this anymore
-        bubbleHeader = ["Click a bubble to see related reviews!"]
-        svg1.append("text")
-          .text(bubbleHeader[0])
-          .attr("x", w/2)
-          .attr("y", barPadding-10)
-          .attr("font-family", "sans-serif")
-          .attr("font-size", "26px")
-          .attr("text-anchor", "middle")*/
+          .style("dominant-baseline", "top")
 
         clicked=false;
         prevAspect = ""
         function showGoodReview() {
           currentAspect = this.__data__[0]
-          Reviews = ReviewsJS[currentAspect]
 
-          toPrint = []
-          for (i=0; i<Reviews.length; i++){
-            if(i==0){
-              toPrint.push("<br>")
+          //DELETE previous way
+          //Reviews = ReviewsJS[currentAspect]
+
+          Review = []
+          for(i=0; i<bubbleJSON.length; i++){
+            if(bubbleJSON[i]["aspect"] == currentAspect) {
+              Review = bubbleJSON[i]["review"]
             }
-            else{
-              toPrint.push("<br><br>")
-            }
+          }
+
+
+
+          toPrint = "\""+Review+"\""
+          if(toPrint=="\"\""){
+            toPrint="Sorry, we are unable to find any reviews for this aspect"
+          }
+          /*for (i=0; i<Reviews.length; i++){
             toPrint.push("\"")
             toPrint.push(Reviews[i])
             toPrint.push("\"")
           }
-
-          toPrint = toPrint.join("");
+          toPrint = toPrint.join("");*/
 
           if(clicked && prevAspect==currentAspect ) {
             tool_tip.hide(toPrint)
@@ -346,7 +372,7 @@
       });
 
     </script>
-    <h1 style="margin-left: 25px";>Review Details: <span id="prodName"></span></h1>
+    <h1 style="margin-left: 25px";><span id="prodName"></span></h1>
 
 
 
