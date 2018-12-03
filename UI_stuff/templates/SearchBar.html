@@ -7,8 +7,11 @@
          <meta name="viewport" content="width=device-width, initial-scale=1">
          <meta name="description" content="">
          <meta name="author" content="">
-         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+         <link rel="stylesheet" href
+         ="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+         <title>Search</title>
          <style>
+
          input[type=text] {
             width: 170px;
             box-sizing: border-box;
@@ -51,165 +54,33 @@
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     </head>
-    <form>
+    <form onsubmit="queryDB()">
         <input type="text" name="searchBar" id="inputBox" class="center"
-        placeholder="Amazon Product ID" onsubmit="redirect()">
-
+        placeholder="Amazon Product ID">
+        <button class="center2" id="button1">Search</button>
     </form>
     <body>
         <b class="center1" >Enter the Amazon Product ID </b>
-        <script type="text/javascript">
-            //const Http = new XMLHttpRequest();
-            //const url = "http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/12345"
 
-            /*
-            $.get('https://www.freecodecamp.com/' + name, function(response) {
-              console.log(response);
-            })*/
-
-            /*
-            var name = "1361362"
-
-            var url = "http://anyorigin.com/go?url=" + encodeURIComponent('http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/') + name + "&callback=?";
-
-            */
-
-            /*
-
-            $("inputBox").submit(function(e){
-                prodID = document.getElementById("inputBox").value
-                var form = $(this);
-                url1 = 'http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/'+prodID;
-
-                $.ajax({
-                    type: "GET",
-                    url: url1,
-                    data: form.serialize(),
-                    success: function(data){
-                        console.log(data)
-                    }
-                })
-
-            })
-
-            */
-
-                //B000068O48
-
-                prodID = document.getElementById("inputBox").value
-                url2 = 'http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/users/product/'+prodID
-                $.get('http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/users/product/B000068O48', function(response) {
-                        console.log(response);
-                    }
-                )
-
-                /*
-                obj = 0;
-                prodID = document.getElementById("inputBox").value
-                $.get('http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/'+prodID,
-                    function(response) {
-                    console.log("Function Starting Query")
-                    obj=JSON.parse(reponse)
-                    console.log(response);
-                if (obj["count"] == 0) {
-                        alert("Sorry, we can't find that product ID. Please try again!")
-                } else {
-                    localStorage.setItem("product",prodID)
-                    window.open('http://127.0.0.1:5000/Review')
-                }
-                });
-
-
-
-            function redirect() {
-                console.log("Starting Query")
-                obj = 0;
-                prodID = document.getElementById("inputBox").value
-                $.get('http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/'+prodID,
-                    function(response) {
-                    console.log("Function Starting Query")
-                    obj=JSON.parse(reponse)
-                    console.log(response);
-                    if (obj["count"] == 0) {
-                        alert("Sorry, we can't find that product ID. Please try again!")
-                } else {
-                    localStorage.setItem("product",prodID)
-                    window.open('http://127.0.0.1:5000/Review')
-                }
-                });
-
-            }
-
-
-            /*
-            $.ajax({
-                 url:'http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/B000068O48',
-                 dataType: 'json',
-                 type: 'get',
-                 success:function(json){
-                     console.log(json)
-                     alert("Success");
-                 },
-                 error:function(){
-                     alert("Error");
-                 }
-            });
-
-
-          /*  var form1 = $('#inputBox');
-
-            form1.submit(function (e)) {
-                $.getJSON(url, function(result){
-                    console.log(result)
-                })
-            }*/
-
-            /*var retData;
-            $.ajax({
-                url: urlR,
-                type: 'GET',
-                crossDomain: true,
-                dataType: 'jsonp',
-                success: function(data) { retData = data; },
-                error: function() { alert('Failed!'); },
-            });
-
-            console.log(url)
-            header("Access-Control-Allow-Origin: *");*/
-/*
-            let header = new Headers({
-                'Access-Control-Allow-Origin':'*',
-                'Content-Type': 'multipart/form-data'
-            });
-
-            fetch(url)
-                .then(data=>{return data.json()})
-                .then(res=>{console.log(res)})*/
-            /*
-            $('#button1').click(function(){
-                $.getJSON(url, function(result){
-                    console.log(result)
-                })
-            })*/
-
-        </script>
-        <button class="center2" id="button1">Search</button>
         <script type="text/javascript">
 
-            function redirect(){}
-                prodID = document.getElementById("inputBox").value
+        function queryDB() {
+            console.log("FUNCTION")
 
-                //window.open("http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/product/"+prodID)
-                //query here
-                /*if (prodID=="test123"){
-                    localStorage.setItem("product",prodID)
-
+            prodID = document.getElementById("inputBox").value
+            console.log(prodID)
+            //localStorage.setItem("product1",prodID);
+            urlGet = 'http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/users/product/'+prodID
+            $.get(urlGet, function(response) {
+                console.log(response);
                 }
-                else {
-                    alert("Sorry, we can't find that product ID. Please try again!")
-                }*/
+            )
 
+            URLnew = 'http://127.0.0.1:5000/Review?id='+prodID
 
+            window.open(URLnew)
+
+        }
 
         </script>
     </body>
