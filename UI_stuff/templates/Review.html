@@ -66,7 +66,6 @@
               alert("Sorry, we are unable to find that product ID")
               window.close()
             } else {
-            console.log(response)
             bubbleJSON = response["bubble"]
             barJSON = response["bar"]
             prodID = response["title"][0]["productTitle"]
@@ -262,32 +261,31 @@
           }
         }
 
-        var scaleX = d3.scale.linear()
-          .domain([minS,maxS])
-          .range([barPadding, w-barPadding]);
-
         var scaleY = d3.scale.ordinal()
           .domain(barScores.map(function(d) { return d[0]; }))
           .rangeRoundBands([20, h*.9-200], .2);
 
         //have to do separate bar chart if all reviews are positive
         if (allPos){
-          svg.selectAll("rect")
-          .data(barScores)
-          .enter()
-          .append("rect")
-          .attr("fill", function(d) { if(d[1] < 0) {return "#d62728"}
-                            else {return "#2ca02c"}})
-          .attr("x", barPadding)
-          .attr("y", function(d) { return scaleY(d[0])})
-          .attr("width", function(d) { return scaleX(d[1])})
-          .attr("height", scaleY.rangeBand());
+          var scaleX1 = d3.scale.linear()
+          .domain([0,maxS])
+          .range([0, w-2*barPadding]);
 
-          var xAxis = d3.svg.axis()
-            .scale(scaleX)
-            .ticks(8)
+          svg.selectAll("bnrect")
+            .data(barScores)
+            .enter()
+            .append("rect")
+            .attr("fill", function(d) { if(d[1] < 0) {return "#d62728"}
+                              else {return "#2ca02c"}})
+            .attr("x", barPadding)
+            .attr("y", function(d) { return scaleY(d[0])})
+            .attr("width", function(d) { return scaleX1(d[1])})
+            .attr("height", scaleY.rangeBand());
+          var xAxis1 = d3.svg.axis()
+
+            .scale(scaleX1)
+            .ticks(5)
             .orient("bottom")
-            .tickFormat(d3.format("d"));
 
           var yAxis = d3.svg.axis()
             .scale(scaleY)
@@ -298,15 +296,20 @@
           barheight = h*.9-200
           svg.append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(0,"+barheight+")")
-            .call(xAxis);
+            .attr("transform", "translate(50,"+barheight+")")
+            .call(xAxis1);
 
           svg.append("g")
             .attr("class", "y axis")
-            .attr("transform", "translate("+scaleX(minS)+",0)")
+            .attr("transform", "translate("+barPadding+",0)")
             .call(yAxis)
 
         } else {
+
+            var scaleX = d3.scale.linear()
+              .domain([minS,maxS])
+              .range([barPadding, w-barPadding]);
+
             svg.selectAll("rect")
             .data(barScores)
             .enter()
