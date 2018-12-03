@@ -311,15 +311,15 @@
               .range([barPadding, w-barPadding]);
 
             svg.selectAll("rect")
-            .data(barScores)
-            .enter()
-            .append("rect")
-            .attr("fill", function(d) { if(d[1] < 0) {return "#d62728"}
-                              else {return "#2ca02c"}})
-            .attr("x", function(d) { return scaleX(Math.min(0, d[1])); })
-            .attr("y", function(d) { return scaleY(d[0]); })
-            .attr("width", function(d) { return Math.abs(scaleX(d[1]) - scaleX(0)); })
-            .attr("height", scaleY.rangeBand());
+              .data(barScores)
+              .enter()
+              .append("rect")
+              .attr("fill", function(d) { if(d[1] < 0) {return "#d62728"}
+                                else {return "#2ca02c"}})
+              .attr("x", function(d) { return scaleX(Math.min(0, d[1])); })
+              .attr("y", function(d) { return scaleY(d[0]); })
+              .attr("width", function(d) { return Math.abs(scaleX(d[1]) - scaleX(0)); })
+              .attr("height", scaleY.rangeBand());
 
             var xAxis = d3.svg.axis()
               .scale(scaleX)
@@ -330,7 +330,7 @@
               .scale(scaleY)
               .orient("right")
               .tickSize(0)
-              .tickPadding(6);
+              .tickPadding(3);
 
             barheight = h*.9-200
             svg.append("g")
