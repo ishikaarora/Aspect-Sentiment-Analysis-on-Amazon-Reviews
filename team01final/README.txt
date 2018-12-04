@@ -1,7 +1,7 @@
 Team 01 : Aspect and Opinion Extraction for Amazon Reviews
 ===========================================================
 
-What is this?
+DESCRIPTION 
 -------------
 This is a compilation of all the things required to run this project file.
 It is arranged in a step-wise manner, where we cover setting up the environment first,
@@ -16,6 +16,9 @@ The folder structure of the package is mentioned below -
 requirements.txt - File to setup the python environment for running the model  [NEED TO UPDATE!!!]
 
 
+INSTALLATION
+--------------------------
+
 Setting up the environment
 --------------------------
 * Setup a base python environment using Miniconda (https://conda.io/miniconda.html)
@@ -28,7 +31,7 @@ Setting up the environment
 
 Note : The models take upto 7-8hours to run for 1M set of reviews. We ran the whole process on
 an AWS EC2 instance. Moreover, roughly the loading of NLP language corpus itself needs around
-2GB RAM, so use higher configurations. We used
+2GB RAM, so use higher configurations. We used [COMPLETE THIS THOUGHT!!!!]
 
 
 Code Files
@@ -43,9 +46,11 @@ Code Files
 /src/models/aspect_clustering.py - Contains all required functions to run clustering
 
 
-How to run?
+EXECUTION
 ----------
 
+Run Model
+----------
 We are providing with two options to run -
 1. On one whole file (amazon_reviews_us_Electronics_v1) which has around 3M+ reviews
 2. One toy file we have created as a subset of the above mentioned file
@@ -63,9 +68,8 @@ About the files that are generated -
   * model_results_encoding.json - the final file that is used to populate the db and then UI used it
   * reviews_aspect_mapping.json - the output file from first step (aspect extraction) used by clustering
 
-To access UI
+Access UI
 ------------
-
 1. Navigate to the folder UI_stuff
 2. Run the command "python app.py"
 3. Open "http://127.0.0.1:5000/" in full-sized Firefox window
