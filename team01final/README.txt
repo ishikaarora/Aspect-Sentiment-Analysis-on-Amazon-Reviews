@@ -62,3 +62,25 @@ About the files that are generated -
 * Files in data/processed -
   * model_results_encoding.json - the final file that is used to populate the db and then UI used it
   * reviews_aspect_mapping.json - the output file from first step (aspect extraction) used by clustering
+
+To access UI
+------------
+
+1. Navigate to the folder UI_stuff
+2. Run the command "python app.py"
+3. Open "http://127.0.0.1:5000/" in full-sized Firefox window
+    a. If you get a cross-origin resource sharing (CORS) error, you may have to install an extension for firefox to allow CORS
+4. Search for Amazon product IDs (sample list below)
+    a. It takes ~10-15 seconds to query the database / product review page to load
+
+Sample list of product IDS:
+B0009YJXMI
+B000A3WS16
+B00006JQ5N
+B0007PGADE
+B000068O48
+B00000J1QR
+B00030CHQ2
+
+
+
