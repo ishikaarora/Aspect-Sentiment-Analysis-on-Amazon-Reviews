@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+         <meta charset="utf-8">
+         <title>Search</title>
+         <style>
+
+         input[type=text] {
+            width: 170px;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: white;
+            background-position: 10px 10px;
+            background-repeat: no-repeat;
+            padding: 12px 12px 12px 12px;
+            -webkit-transition: width 0.25s ease-in-out;
+            transition: width 0.25s ease-in-out;
+         }
+         input[type=text]:focus {
+            width: 50%;
+        }
+         .center {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+         }
+        .center1 {
+            position: fixed;
+            font-size: 25px;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+         }
+        .center2 {
+            position: fixed;
+            font-size: 16px;
+            top: 50%;
+            right: 25%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+         }
+         body {background-color: #F5F5F5;}
+        </style>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    </head>
+    <form onsubmit="queryDB()">
+        <input type="text" name="searchBar" id="inputBox" class="center"
+        placeholder="Amazon Product ID">
+        <button class="center2" id="button1">Search</button>
+    </form>
+    <body>
+        <b class="center1" >Enter the Amazon Product ID </b>
+
+        <script type="text/javascript">
+
+        function queryDB() {
+            prodID = document.getElementById("inputBox").value.trim()
+            urlGet = 'http://ec2-34-235-156-38.compute-1.amazonaws.com:3000/users/product/'+prodID
+            $.get(urlGet, function(response) {
+                console.log(response);
+                }
+            )
+            URLnew = 'http://127.0.0.1:5000/Review?id='+prodID
+            window.open(URLnew)
+        }
+
+        </script>
+    </body>
+
+</html>
