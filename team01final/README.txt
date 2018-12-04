@@ -31,7 +31,7 @@ Setting up the environment
 
 Note : The models take upto 7-8hours to run for 1M set of reviews. We ran the whole process on
 an AWS EC2 instance. Moreover, roughly the loading of NLP language corpus itself needs around
-2GB RAM, so use higher configurations. We used [COMPLETE THIS THOUGHT!!!!]
+2GB RAM, so use higher configurations.
 
 
 Code Files
