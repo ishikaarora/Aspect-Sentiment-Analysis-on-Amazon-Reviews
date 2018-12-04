@@ -13,7 +13,7 @@ The folder structure of the package is mentioned below -
 /data - Contains all the required data files
 /src - Contains all the code files
 /UI - Contains the required files for seeing the Visualisation
-requirements.txt - File to setup the python environment for running the model  [NEED TO UPDATE!!!]
+requirements.txt - File to setup the python environment for running the model 
 
 
 INSTALLATION
