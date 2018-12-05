@@ -70,12 +70,12 @@ About the files that are generated -
 
 Access UI
 ------------
-1. Navigate to the folder UI_stuff
+1. Navigate to the folder code/src/UI_stuff
 2. Run the command "python app.py"
 3. To avoid getting a cross-origin resource sharing (CORS) error, you will have to install an extension for firefox to allow CORS. https://addons.mozilla.org/en-US/firefox/addon/access-control-allow-origin/
 4. Open "http://127.0.0.1:5000/" in full-sized Firefox window
 5. Search for Amazon product IDs (sample list below)
-    a. It takes ~10-15 seconds to query the database / product review page to load
+    a. It takes ~15-20 seconds to query the database / product review page to load
 
 Sample list of product IDS:
 B0009YJXMI
