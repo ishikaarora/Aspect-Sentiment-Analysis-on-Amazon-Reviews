@@ -1,7 +1,7 @@
 Team 01 : Aspect and Opinion Extraction for Amazon Reviews
 ===========================================================
 
-DESCRIPTION 
+DESCRIPTION
 -------------
 This is a compilation of all the things required to run this project file.
 It is arranged in a step-wise manner, where we cover setting up the environment first,
@@ -13,7 +13,7 @@ The folder structure of the package is mentioned below -
 /data - Contains all the required data files
 /src - Contains all the code files
 /UI - Contains the required files for seeing the Visualisation
-requirements.txt - File to setup the python environment for running the model 
+requirements.txt - File to setup the python environment for running the model
 
 
 INSTALLATION
@@ -72,9 +72,9 @@ Access UI
 ------------
 1. Navigate to the folder UI_stuff
 2. Run the command "python app.py"
-3. Open "http://127.0.0.1:5000/" in full-sized Firefox window
-    a. If you get a cross-origin resource sharing (CORS) error, you may have to install an extension for firefox to allow CORS
-4. Search for Amazon product IDs (sample list below)
+3. To avoid getting a cross-origin resource sharing (CORS) error, you will have to install an extension for firefox to allow CORS. https://addons.mozilla.org/en-US/firefox/addon/access-control-allow-origin/
+4. Open "http://127.0.0.1:5000/" in full-sized Firefox window
+5. Search for Amazon product IDs (sample list below)
     a. It takes ~10-15 seconds to query the database / product review page to load
 
 Sample list of product IDS:
