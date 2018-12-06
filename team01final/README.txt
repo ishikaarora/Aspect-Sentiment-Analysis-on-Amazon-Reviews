@@ -12,7 +12,6 @@ Github link - https://github.com/ishikaarora4/Aspect-Sentiment-Analysis-on-Amazo
 The folder structure of the package is mentioned below -
 /data - Contains all the required data files
 /src - Contains all the code files
-/UI - Contains the required files for seeing the Visualisation
 requirements.txt - File to setup the python environment for running the model
 
 
@@ -29,7 +28,7 @@ Setting up the environment
 * Run this to download the NLTK polarity model inside a python shell - nltk.download('vader_lexicon')
 
 
-Note : The models take upto 7-8hours to run for 1M set of reviews. We ran the whole process on
+Note : The models take upto 7-8 hours to run for 1M set of reviews. We ran the whole process on
 an AWS EC2 instance. Moreover, roughly the loading of NLP language corpus itself needs around
 2GB RAM, so use higher configurations.
 
@@ -45,6 +44,8 @@ Code Files
 
 /src/models/aspect_clustering.py - Contains all required functions to run clustering
 
+code/src/UI_stuff - All code related to UI
+
 
 EXECUTION
 ----------
@@ -57,7 +58,7 @@ We are providing with two options to run -
 
 Add argument as 1, if you want to run on the toy file.
 
-Note : Run all commands from the code folder
+Note : Run all commands except UI from the code folder
 
 * python src/models/run_extraction.py <arg = 1 or 0>
 * python src/models/aspect_clustering.py
