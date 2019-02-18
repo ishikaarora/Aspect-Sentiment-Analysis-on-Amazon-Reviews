@@ -1,8 +1,3 @@
-# Aspect-Sentiment-Analysis-on-Amazon-Reviews
-
-Project Repository for CSE-6242 course.
-
-
 Team 01 : Aspect and Opinion Extraction for Amazon Reviews
 ===========================================================
 
