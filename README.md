@@ -8,6 +8,7 @@ It is arranged in a step-wise manner, where we cover setting up the environment 
 explain the different code files and finally how to run the visualisation.
 
 Github link - https://github.com/ishikaarora4/Aspect-Sentiment-Analysis-on-Amazon-Reviews
+Blog link - http://bit.ly/nlpamazon
 
 The folder structure of the package is mentioned below -
 /data - Contains all the required data files
